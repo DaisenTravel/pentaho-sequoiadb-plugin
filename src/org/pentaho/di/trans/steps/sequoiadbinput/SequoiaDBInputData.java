@@ -3,9 +3,11 @@ package org.pentaho.di.trans.steps.sequoiadbinput;
 import java.util.List;
 
 import org.bson.BSONObject;
+import org.bson.types.Binary;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMeta;
+import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.steps.sequoiadb.SequoiaDBField;
@@ -30,7 +32,26 @@ public class SequoiaDBInputData extends BaseStepData implements StepDataInterfac
    }
    
    public Object getKettleValue( Object input, int type ){
-      //TODO: get the value
-      return null;
+      Object result = null;
+      switch ( type ){
+         case ValueMetaInterface.TYPE_INTEGER:
+            if ( input instanceof Number ){
+               result = new Long( ((Number)input).intValue() );
+            }
+            else if( input instanceof Binary ){
+               byte[] b = ((Binary)input).getData();
+               String s = new String( b );
+               result = new Integer( s );
+            }
+            else{
+               result = new Integer( input.toString() );
+            }
+            // TODO:
+            // TODO:
+            // TODO:
+            // TODO:
+            // TODO:
+      }
+      return result;
    }
 }
