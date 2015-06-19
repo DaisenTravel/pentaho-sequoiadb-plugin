@@ -83,6 +83,7 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
          for (int i = 0; i < m_fields.size(); i++){
             SequoiaDBField fieldTmp = m_fields.get(i);
             rep.saveStepAttribute(id_transformation, id_step, i, "field_name", fieldTmp.m_fieldName);
+            rep.saveStepAttribute(id_transformation, id_step, i, "field_path", fieldTmp.m_path);
             rep.saveStepAttribute(id_transformation, id_step, i, "field_type", fieldTmp.m_kettleType);
          }
       }
@@ -102,6 +103,7 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
          for( int i = 0; i < numFields; i++){
             SequoiaDBField fieldTmp = new SequoiaDBField();
             fieldTmp.m_fieldName = rep.getStepAttributeString(id_step, i, "field_name");
+            fieldTmp.m_path = rep.getStepAttributeString(id_step, i, "field_path");
             fieldTmp.m_kettleType = rep.getStepAttributeString(id_step, i, "field_type");
             m_fields.add(fieldTmp);
          }
@@ -116,11 +118,14 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
      retval.append( "    " ).append( XMLHandler.addTagValue( "CSName", getCSName() ) );
      retval.append( "    " ).append( XMLHandler.addTagValue( "CLName", getCLName() ) );
      if ( m_fields != null && m_fields.size() > 0 ){
+        int index = 0;
         retval.append( "\n    ").append( XMLHandler.openTag( "selected_fields" ));
         for ( SequoiaDBField f : m_fields ){
            retval.append("\n      ").append(XMLHandler.openTag( "selected_field" ));
            retval.append("\n        ").append(
                  XMLHandler.addTagValue( "field_name", f.m_fieldName));
+           retval.append("\n        ").append(
+                 XMLHandler.addTagValue( "field_path", f.m_path));
            retval.append("\n        ").append(
                  XMLHandler.addTagValue( "field_type", f.m_kettleType));
            retval.append("\n      ").append(XMLHandler.closeTag( "selected_field" ));
@@ -163,6 +168,7 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
            Node fieldNode = XMLHandler.getSubNodeByNr( selectedFields, "selected_field", i);
            SequoiaDBField fieldTmp = new SequoiaDBField();
            fieldTmp.m_fieldName = XMLHandler.getTagValue( fieldNode, "field_name");
+           fieldTmp.m_path = XMLHandler.getTagValue( fieldNode, "field_path");
            fieldTmp.m_kettleType = XMLHandler.getTagValue( fieldNode, "field_type");
            m_fields.add(fieldTmp);
         }

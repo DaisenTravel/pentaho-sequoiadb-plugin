@@ -251,16 +251,16 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 
       final ColumnInfo[] colinf = new ColumnInfo[] {
           new ColumnInfo(BaseMessages.getString(PKG,
-              "SequoiaDBInput.FieldsTab.FIELD_NAME"), //$NON-NLS-1$
+              "SequoiaDBInput.FieldsTab.FIELD_ALIAS"), //$NON-NLS-1$
               ColumnInfo.COLUMN_TYPE_TEXT, false),
-          /*new ColumnInfo(BaseMessages.getString(PKG,
+          new ColumnInfo(BaseMessages.getString(PKG,
               "SequoiaDBInput.FieldsTab.FIELD_PATH"), //$NON-NLS-1$
-              ColumnInfo.COLUMN_TYPE_TEXT, false),*/
+              ColumnInfo.COLUMN_TYPE_TEXT, false),
           new ColumnInfo(BaseMessages.getString(PKG,
               "SequoiaDBInput.FieldsTab.FIELD_TYPE"), //$NON-NLS-1$
               ColumnInfo.COLUMN_TYPE_CCOMBO, false), };
 
-      colinf[1].setComboValues(ValueMeta.getTypes());
+      colinf[2].setComboValues(ValueMeta.getTypes());
       
       m_fieldsView = new TableView(transMeta, wFieldsComp, SWT.FULL_SELECTION
             | SWT.MULTI, colinf, 1, lsMod, props);
@@ -400,7 +400,8 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
             TableItem item = m_fieldsView.getNonEmpty(i);
             SequoiaDBField fieldTmp = new SequoiaDBField();
             fieldTmp.m_fieldName = item.getText(1).trim();
-            fieldTmp.m_kettleType = item.getText(2).trim();
+            fieldTmp.m_path = item.getText(2).trim();
+            fieldTmp.m_kettleType = item.getText(3).trim();
             selectedFields.add(fieldTmp);
          }
          m_meta.setSelectedFields(selectedFields);
@@ -420,8 +421,12 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
             item.setText(1, f.m_fieldName);
          }
          
+         if(!Const.isEmpty(f.m_path)){
+            item.setText(2, f.m_path);
+         }
+         
          if(!Const.isEmpty(f.m_kettleType)){
-            item.setText(2, f.m_kettleType);
+            item.setText(3, f.m_kettleType);
          }
       }
       

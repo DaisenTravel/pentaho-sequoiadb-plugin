@@ -1,10 +1,13 @@
 package org.pentaho.di.trans.steps.sequoiadbinput;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bson.BSONObject;
+import org.bson.BasicBSONObject;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMeta;
-import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStep;
@@ -12,6 +15,7 @@ import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
+import org.pentaho.di.trans.steps.sequoiadb.SequoiaDBField;
 
 import com.sequoiadb.base.CollectionSpace;
 import com.sequoiadb.base.DBCollection;
@@ -23,6 +27,7 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
    private SequoiaDBInputMeta m_meta;
    private SequoiaDBInputData m_data;
    private DBCursor           m_cursor;
+   private boolean            m_isOutputJson = false;
 
 	public SequoiaDBInput(StepMeta stepMeta,
 			StepDataInterface stepDataInterface, int copyNr,
@@ -49,9 +54,27 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
 	         return false;
 	      }
 	      DBCollection cl = cs.getCollection(m_meta.getCLName());
-	      m_cursor = cl.query();
+	      
+	      List<SequoiaDBField> selectedFields = m_meta.getSelectedFields();
+	      if ( null != selectedFields || selectedFields.size() != 0 ){
+	         BSONObject fieldsObj = new BasicBSONObject();
+	         for ( SequoiaDBField f : selectedFields ){
+	            String pathTmp = "$" + f.m_path;
+	            fieldsObj.put(f.m_fieldName, pathTmp);
+	         }
+	         BSONObject projectObj = new BasicBSONObject();
+	         projectObj.put("$project", fieldsObj);
+	         List<BSONObject> aggrObjs = new ArrayList<BSONObject>();
+	         aggrObjs.add(projectObj);
+	         m_cursor = cl.aggregate( aggrObjs );
+	      }
+	      else
+	      {
+	         m_cursor = cl.query();
+	      }
+	      return true;
 	   }
-	   return true;
+	   return false;
 	}
 
 	@Override
@@ -85,16 +108,30 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
          data.outputRowMeta = new RowMeta();
          // use meta.getFields() to change it, so it reflects the output row structure 
          meta.getFields(data.outputRowMeta, getStepname(), null, null, SequoiaDBInput.this);
+         List<SequoiaDBField> selectedFields = meta.getSelectedFields();
+         if ( null == selectedFields || selectedFields.size() == 0 ){
+            m_isOutputJson = true;
+         }
+         else
+         {
+            m_isOutputJson = false;
+         }
       }
 
       // read the record from SDB
       if(m_cursor.hasNext())
       {
          BSONObject obj = m_cursor.getNext();
-         String json = obj.toString();
-         Object row[] = RowDataUtil.allocateRowData(m_data.outputRowMeta.size());;
-         row[0]=json;
-         putRow(data.outputRowMeta, row);
+         if( m_isOutputJson ){
+            String json = obj.toString();
+            Object row[] = RowDataUtil.allocateRowData(m_data.outputRowMeta.size());;
+            row[0]=json;
+            putRow(data.outputRowMeta, row);
+         }
+         else{
+            Object row[] = data.BSONToKettle( obj, meta.getSelectedFields() ) ;
+            putRow(data.outputRowMeta,row);
+         }
       }
       else{
          setOutputDone();
