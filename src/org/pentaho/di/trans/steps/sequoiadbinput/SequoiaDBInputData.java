@@ -4,10 +4,13 @@ import java.util.List;
 
 import org.bson.BSONObject;
 import org.bson.types.Binary;
+import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMeta;
 import org.pentaho.di.core.row.ValueMetaInterface;
+import org.pentaho.di.core.row.value.ValueMetaFactory;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.steps.sequoiadb.SequoiaDBField;
@@ -17,7 +20,7 @@ public class SequoiaDBInputData extends BaseStepData implements StepDataInterfac
 
    public RowMetaInterface outputRowMeta;
    
-   public Object[] BSONToKettle( BSONObject input, List<SequoiaDBField> fields ){
+   public Object[] BSONToKettle( BSONObject input, List<SequoiaDBField> fields ) throws KettleException{
       Object[] result = null;
       if ( null == fields || fields.size() == 0 ){
          return result;
@@ -25,32 +28,9 @@ public class SequoiaDBInputData extends BaseStepData implements StepDataInterfac
       result = RowDataUtil.allocateRowData( outputRowMeta.size() );
       for ( SequoiaDBField f : fields ){
          Object fieldObj = input.get( f.m_fieldName );
-         Object valObj = getKettleValue( fieldObj,
+         Object valObj = f.getKettleValue( fieldObj,
                                ValueMeta.getType( f.m_kettleType ));
-      }
-      return result;
-   }
-   
-   public Object getKettleValue( Object input, int type ){
-      Object result = null;
-      switch ( type ){
-         case ValueMetaInterface.TYPE_INTEGER:
-            if ( input instanceof Number ){
-               result = new Long( ((Number)input).intValue() );
-            }
-            else if( input instanceof Binary ){
-               byte[] b = ((Binary)input).getData();
-               String s = new String( b );
-               result = new Integer( s );
-            }
-            else{
-               result = new Integer( input.toString() );
-            }
-            // TODO:
-            // TODO:
-            // TODO:
-            // TODO:
-            // TODO:
+         result[f.m_outputIndex] = valObj;
       }
       return result;
    }

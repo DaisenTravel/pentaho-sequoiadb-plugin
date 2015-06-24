@@ -108,6 +108,7 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
          data.outputRowMeta = new RowMeta();
          // use meta.getFields() to change it, so it reflects the output row structure 
          meta.getFields(data.outputRowMeta, getStepname(), null, null, SequoiaDBInput.this);
+         meta.init( data.outputRowMeta );
          List<SequoiaDBField> selectedFields = meta.getSelectedFields();
          if ( null == selectedFields || selectedFields.size() == 0 ){
             m_isOutputJson = true;
@@ -129,7 +130,7 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
             putRow(data.outputRowMeta, row);
          }
          else{
-            Object row[] = data.BSONToKettle( obj, meta.getSelectedFields() ) ;
+            Object[] row = data.BSONToKettle( obj, meta.getSelectedFields() ) ;
             putRow(data.outputRowMeta,row);
          }
       }

@@ -7,6 +7,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.pentaho.di.core.annotations.Step;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.exception.KettlePluginException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.exception.KettleXMLException;
 import org.pentaho.di.core.row.RowMetaInterface;
@@ -44,6 +45,13 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
    private static Class<?> PKG = SequoiaDBInputMeta.class;// for i18n purposes
 
    private List<SequoiaDBField> m_fields;
+   
+   public void init( RowMetaInterface outputRowMeta) throws KettlePluginException{
+      for( SequoiaDBField f:m_fields){
+         int outputIndex = outputRowMeta.indexOfValue( f.m_fieldName );
+         f.init( outputIndex );
+      }
+   }
 
    public StepDialogInterface getDialog(Shell shell, StepMetaInterface meta, TransMeta transMeta, String name) {
       return new SequoiaDBInputDialog(shell, meta, transMeta, name);
