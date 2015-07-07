@@ -15,7 +15,6 @@ import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
-import org.pentaho.di.trans.steps.sequoiadb.SequoiaDBField;
 
 import com.sequoiadb.base.CollectionSpace;
 import com.sequoiadb.base.DBCollection;
@@ -33,7 +32,6 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
 			StepDataInterface stepDataInterface, int copyNr,
 			TransMeta transMeta, Trans trans) {
 		super(stepMeta, stepDataInterface, copyNr, transMeta, trans);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -55,10 +53,10 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
 	      }
 	      DBCollection cl = cs.getCollection(m_meta.getCLName());
 	      
-	      List<SequoiaDBField> selectedFields = m_meta.getSelectedFields();
-	      if ( null != selectedFields || selectedFields.size() != 0 ){
+	      List<SequoiaDBInputField> selectedFields = m_meta.getSelectedFields();
+	      if ( null != selectedFields && selectedFields.size() != 0 ){
 	         BSONObject fieldsObj = new BasicBSONObject();
-	         for ( SequoiaDBField f : selectedFields ){
+	         for ( SequoiaDBInputField f : selectedFields ){
 	            String pathTmp = "$" + f.m_path;
 	            fieldsObj.put(f.m_fieldName, pathTmp);
 	         }
@@ -109,7 +107,7 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
          // use meta.getFields() to change it, so it reflects the output row structure 
          meta.getFields(data.outputRowMeta, getStepname(), null, null, SequoiaDBInput.this);
          meta.init( data.outputRowMeta );
-         List<SequoiaDBField> selectedFields = meta.getSelectedFields();
+         List<SequoiaDBInputField> selectedFields = meta.getSelectedFields();
          if ( null == selectedFields || selectedFields.size() == 0 ){
             m_isOutputJson = true;
          }

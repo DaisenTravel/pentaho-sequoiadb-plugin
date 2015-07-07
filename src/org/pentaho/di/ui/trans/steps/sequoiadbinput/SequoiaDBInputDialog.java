@@ -27,14 +27,12 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.Props;
-import org.pentaho.di.core.exception.KettleException;
-import org.pentaho.di.core.exception.KettlePluginException;
 import org.pentaho.di.core.row.ValueMeta;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStepMeta;
 import org.pentaho.di.trans.step.StepDialogInterface;
-import org.pentaho.di.trans.steps.sequoiadb.SequoiaDBField;
+import org.pentaho.di.trans.steps.sequoiadbinput.SequoiaDBInputField;
 import org.pentaho.di.trans.steps.sequoiadbinput.SequoiaDBInputMeta;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
 import org.pentaho.di.ui.core.widget.TableView;
@@ -397,10 +395,10 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
       
       int numFields = m_fieldsView.nrNonEmpty();
       if (numFields > 0){
-         List<SequoiaDBField> selectedFields = new ArrayList<SequoiaDBField>();
+         List<SequoiaDBInputField> selectedFields = new ArrayList<SequoiaDBInputField>();
          for (int i = 0; i < numFields; i++) {
             TableItem item = m_fieldsView.getNonEmpty(i);
-            SequoiaDBField fieldTmp = new SequoiaDBField();
+            SequoiaDBInputField fieldTmp = new SequoiaDBInputField();
             fieldTmp.m_fieldName = item.getText(1).trim();
             fieldTmp.m_path = item.getText(2).trim();
             fieldTmp.m_kettleType = item.getText(3).trim();
@@ -410,13 +408,13 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
       }
    }
    
-   private void setSelectedFields(List<SequoiaDBField> fields) {
+   private void setSelectedFields(List<SequoiaDBInputField> fields) {
       if (null == fields) {
          return ;
       }
       
       m_fieldsView.clearAll();
-      for (SequoiaDBField f : fields){
+      for (SequoiaDBInputField f : fields){
          TableItem item = new TableItem(m_fieldsView.table, SWT.NONE);
          
          if(!Const.isEmpty(f.m_fieldName)){
