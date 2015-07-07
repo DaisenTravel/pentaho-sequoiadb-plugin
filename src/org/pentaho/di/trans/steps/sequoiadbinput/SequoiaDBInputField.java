@@ -1,4 +1,4 @@
-package org.pentaho.di.trans.steps.sequoiadb;
+package org.pentaho.di.trans.steps.sequoiadbinput;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -6,7 +6,6 @@ import java.util.Date;
 import org.bson.types.Binary;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettlePluginException;
-import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.ValueMeta;
 import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.core.row.value.ValueMetaFactory;
@@ -14,9 +13,9 @@ import org.pentaho.di.i18n.BaseMessages;
 
 
 
-public class SequoiaDBField implements Comparable<SequoiaDBField> {
+public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
 
-   protected static Class<?> PKG = SequoiaDBField.class;
+   protected static Class<?> PKG = SequoiaDBInputField.class;
    public String m_fieldName = "";
    public String m_kettleType = "";
    public String m_path = "";
@@ -29,7 +28,7 @@ public class SequoiaDBField implements Comparable<SequoiaDBField> {
    }
 
    @Override
-   public int compareTo( SequoiaDBField comp ) {
+   public int compareTo( SequoiaDBInputField comp ) {
      return m_fieldName.compareTo( comp.m_fieldName );
    }
    
