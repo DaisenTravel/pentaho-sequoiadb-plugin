@@ -315,11 +315,11 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       // Add listeners for cancel and OK
       lsCancel = new Listener() {
          @Override
-         public void handleEvent(Event e) {cancel();}
+         public void handleEvent(Event e) {btnCancel();}
 
       };
       lsOK = new Listener() {
-         public void handleEvent(Event e) {ok();}
+         public void handleEvent(Event e) {btnOk();}
       };
 
       wCancel.addListener(SWT.Selection, lsCancel);
@@ -327,14 +327,14 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
 
       // default listener (for hitting "enter")
       lsDef = new SelectionAdapter() {
-         public void widgetDefaultSelected(SelectionEvent e) {ok();}
+         public void widgetDefaultSelected(SelectionEvent e) {btnOk();}
       };
       wStepname.addSelectionListener(lsDef);
       m_wPort.addSelectionListener(lsDef);
 
       // Detect X or ALT-F4 or something that kills this window and cancel the dialog properly
       shell.addShellListener(new ShellAdapter() {
-         public void shellClosed(ShellEvent e) {cancel();}
+         public void shellClosed(ShellEvent e) {btnCancel();}
       });
 
       m_wTabFolder.setSelection(0);
@@ -356,7 +356,7 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
             display.sleep();
       }
 
-      // at this point the dialog has closed, so either ok() or cancel() have been executed
+      // at this point the dialog has closed, so either btnOk() or btnCancel() have been executed
       // The "stepname" variable is inherited from BaseStepDialog
       return stepname;
    }
@@ -364,7 +364,7 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
    /**
     * Called when the user cancels the dialog.  
     */
-   private void cancel() {
+   private void btnCancel() {
       // The "stepname" variable will be the return value for the open() method. 
       // Setting to null to indicate that dialog was cancelled.
       stepname = null;
@@ -377,7 +377,7 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
    /**
     * Called when the user confirms the dialog
     */
-   private void ok() {
+   private void btnOk() {
       // The "stepname" variable will be the return value for the open() method. 
       // Setting to step name from the dialog control
       if (Const.isEmpty(wStepname.getText()))

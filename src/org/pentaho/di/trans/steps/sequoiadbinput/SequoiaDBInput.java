@@ -127,18 +127,18 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
       {
          BSONObject obj = m_cursor.getNext();
 
-         List<BSONObject> objList = expandBSONArray( obj ) ;
-         for ( BSONObject o : objList ) {
-             if( m_isOutputJson ){
-                 String json = o.toString();
-                 Object row[] = RowDataUtil.allocateRowData(m_data.outputRowMeta.size());
-                 row[0]=json;
-                 putRow(data.outputRowMeta,row);
-              }
-              else{
+         if( m_isOutputJson ){
+             String json = obj.toString();
+             Object row[] = RowDataUtil.allocateRowData(m_data.outputRowMeta.size());
+             row[0]=json;
+             putRow(data.outputRowMeta,row);
+         }
+         else{
+	     List<BSONObject> objList = expandBSONArray( obj ) ;
+             for ( BSONObject o : objList ) {
                  Object[] row = data.BSONToKettle( o, meta.getSelectedFields() ) ;
                  putRow(data.outputRowMeta,row);
-              }
+             }
          }
       }
       else{
