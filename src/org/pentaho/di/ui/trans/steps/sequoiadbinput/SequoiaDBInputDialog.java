@@ -47,15 +47,19 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 	private CTabItem m_wSdbInputTab;
 	private CTabItem m_wSdbQueryTab;
 	private CTabItem m_wSdbFieldsTab;
-   private CTabItem m_wSdbOrderByTab;
+	private CTabItem m_wSdbOrderByTab;
 
-   private TextVar m_wHostname;
-   private TextVar m_wPort;
-   private TextVar m_wCSName;
-   private TextVar m_wCLName;
-   private TableView m_fieldsView;
+	private TextVar m_wHostname;
+	private TextVar m_wPort;
+	private TextVar m_wCSName;
+	private TextVar m_wCLName;
+	private TableView m_fieldsView;
 
-   private SequoiaDBInputMeta m_meta;
+	private SequoiaDBInputMeta m_meta;
+	
+	private final int FIRST_COL = 1;
+	private final int SECOND_COL = 2;
+	private final int THIRD_COL = 3;
 	
 	public SequoiaDBInputDialog(Shell parent, Object in,
 			TransMeta transMeta, String stepname) {
@@ -300,10 +304,10 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 
       // Add listeners for cancel and OK
       lsCancel = new Listener() {
-         public void handleEvent(Event e) {cancel();}
+         public void handleEvent(Event e) {btnCancel();}
       };
       lsOK = new Listener() {
-         public void handleEvent(Event e) {ok();}
+         public void handleEvent(Event e) {btnOk();}
       };
 
       wCancel.addListener(SWT.Selection, lsCancel);
@@ -311,14 +315,14 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 
       // default listener (for hitting "enter")
       lsDef = new SelectionAdapter() {
-         public void widgetDefaultSelected(SelectionEvent e) {ok();}
+         public void widgetDefaultSelected(SelectionEvent e) {btnOk();}
       };
       wStepname.addSelectionListener(lsDef);
       m_wPort.addSelectionListener(lsDef);
 
       // Detect X or ALT-F4 or something that kills this window and cancel the dialog properly
       shell.addShellListener(new ShellAdapter() {
-         public void shellClosed(ShellEvent e) {cancel();}
+         public void shellClosed(ShellEvent e) {btnCancel();}
       });
 
       m_wTabFolder.setSelection(0);
@@ -361,7 +365,7 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 	/**
     * Called when the user cancels the dialog.  
     */
-   private void cancel() {
+   private void btnCancel() {
       // The "stepname" variable will be the return value for the open() method. 
       // Setting to null to indicate that dialog was cancelled.
       stepname = null;
@@ -374,7 +378,7 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
    /**
     * Called when the user confirms the dialog
     */
-   private void ok() {
+   private void btnOk() {
       // The "stepname" variable will be the return value for the open() method. 
       // Setting to step name from the dialog control
       if (Const.isEmpty(wStepname.getText()))
@@ -399,9 +403,9 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
          for (int i = 0; i < numFields; i++) {
             TableItem item = m_fieldsView.getNonEmpty(i);
             SequoiaDBInputField fieldTmp = new SequoiaDBInputField();
-            fieldTmp.m_fieldName = item.getText(1).trim();
-            fieldTmp.m_path = item.getText(2).trim();
-            fieldTmp.m_kettleType = item.getText(3).trim();
+            fieldTmp.m_fieldName = item.getText(FIRST_COL).trim();
+            fieldTmp.m_path = item.getText(SECOND_COL).trim();
+            fieldTmp.m_kettleType = item.getText(THIRD_COL).trim();
             selectedFields.add(fieldTmp);
          }
          m_meta.setSelectedFields(selectedFields);
@@ -418,15 +422,15 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
          TableItem item = new TableItem(m_fieldsView.table, SWT.NONE);
          
          if(!Const.isEmpty(f.m_fieldName)){
-            item.setText(1, f.m_fieldName);
+            item.setText(FIRST_COL, f.m_fieldName);
          }
          
          if(!Const.isEmpty(f.m_path)){
-            item.setText(2, f.m_path);
+            item.setText(SECOND_COL, f.m_path);
          }
          
          if(!Const.isEmpty(f.m_kettleType)){
-            item.setText(3, f.m_kettleType);
+            item.setText(THIRD_COL, f.m_kettleType);
          }
       }
       
