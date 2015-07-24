@@ -179,8 +179,8 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
 		   int size = pathField.size();
 		   for (int i = 0; i < size; ++i) {
 			   for(int j = i+1; j < size; ++j) {
-				   if (    pathField.get(i).indexOf(pathField.get(j)) != -1
-						|| pathField.get(j).indexOf(pathField.get(i)) != -1) {
+				   if (    pathField.get(i).indexOf(pathField.get(j)) == 0
+						|| pathField.get(j).indexOf(pathField.get(i)) == 0) {
 					   return true;
 				   }
 			   }
