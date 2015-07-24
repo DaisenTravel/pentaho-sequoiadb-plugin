@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.bson.BSONObject;
 import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.Trans;
@@ -142,6 +143,12 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
                "SequoiaDBOutput.Msg.Err.InputFieldsSizeError" )) ;
       }
       
+      if ( conflict(fields) ) {
+    	  throw new KettleException( BaseMessages.getString( PKG,
+                  "SequoiaDBOutput.Msg.Err.FailedToWriteTheFieldVal"
+                  + "the field path is conflict" ) );
+      }
+      
       Set<String> input = new HashSet<String>( rmi.getFieldNames().length, 1 ) ;
       Set<String> output = new HashSet<String>( fields.size(), 1 ) ;
       for( int i = 0; i < rmi.size(); i++ ) {
@@ -160,5 +167,26 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
          throw new KettleException( BaseMessages.getString( PKG,
                "SequoiaDBOutput.Msg.Err.FieldsNotFoundInInput", loseFields.toString() ));
       }
+   }
+   
+   public boolean conflict(List<SequoiaDBOutputField> fields) {
+	   List<String> pathField = new ArrayList<String>();
+	   for ( SequoiaDBOutputField row : fields) {
+		   pathField.add(row.m_path);
+	   }
+	   
+	   if ( !pathField.isEmpty() && pathField.size() >= 2 ) {
+		   int size = pathField.size();
+		   for (int i = 0; i < size; ++i) {
+			   for(int j = i+1; j < size; ++j) {
+				   if (    pathField.get(i).indexOf(pathField.get(j)) != -1
+						|| pathField.get(j).indexOf(pathField.get(i)) != -1) {
+					   return true;
+				   }
+			   }
+		   }
+	   }
+		   
+	   return false;
    }
 }

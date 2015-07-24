@@ -211,6 +211,9 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
 		else
 		{
 			BasicBSONObject o = new BasicBSONObject() ;
+			if ( !obj.isEmpty() ) {
+				o.putAll( obj );
+			}
 			o.append(keyName, v);
 			objList.add(o);
 		}

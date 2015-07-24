@@ -104,11 +104,12 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
                valTmp = new Boolean(((Date)input).getTime() != 0 );
             }
             else{
-               valTmp = new Boolean( input.toString().equalsIgnoreCase( "Y" )
-                     || input.toString().equalsIgnoreCase( "T" )
-                     || input.toString().equalsIgnoreCase( "1" ) );
+               valTmp = new Boolean(   input.toString().equalsIgnoreCase( "false" )
+                                    || input.toString().equalsIgnoreCase( "0" ) );
+               
             }
-            result = m_tmpValueMeta.getBoolean( input );
+            result = !m_tmpValueMeta.getBoolean( valTmp );
+            break;
          case ValueMetaInterface.TYPE_DATE:
             if ( null == input ){
                valTmp = getDefaultValue( type );
