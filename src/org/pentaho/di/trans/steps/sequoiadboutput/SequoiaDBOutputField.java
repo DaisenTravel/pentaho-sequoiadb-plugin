@@ -1,5 +1,8 @@
 package org.pentaho.di.trans.steps.sequoiadboutput;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.i18n.BaseMessages;
@@ -11,6 +14,8 @@ public class SequoiaDBOutputField{
    public String m_fieldName = "" ;
 
    public String m_path = "" ;
+   
+   public List<String> m_pathField = null;
 
    public Object getBsonValue( Object input, ValueMetaInterface vmi ) throws KettleValueException {
       if ( vmi.isNull( input ) ) {
@@ -48,5 +53,26 @@ public class SequoiaDBOutputField{
 
       throw new KettleValueException( BaseMessages.getString( PKG,
             "SequoiaDBOutput.Msg.Err.FailedToGetTheFieldVal" ) );
+   }
+   
+   public void splitPath() {
+	   
+	   m_pathField = new ArrayList<String>();
+	   int begin = 0;
+	   int dotPos = 0;
+	   int length = m_path.length();
+	   while (begin < length -1) {
+		   
+		   dotPos = m_path.indexOf('.', begin);
+		   if ( -1 == dotPos ) {
+			   m_pathField.add(m_path.substring(begin));
+			   break;
+		   }
+		   else {
+			   String str = m_path.substring(begin, dotPos);
+			   m_pathField.add(str);
+			   begin = dotPos + 1;
+		   }
+	   }
    }
 }

@@ -344,7 +344,7 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
             display.sleep();
       }
 
-      // at this point the dialog has closed, so either ok() or cancel() have been executed
+      // at this point the dialog has closed, so either btnOk() or btnCancel() have been executed
       // The "stepname" variable is inherited from BaseStepDialog
       return stepname;
 	}

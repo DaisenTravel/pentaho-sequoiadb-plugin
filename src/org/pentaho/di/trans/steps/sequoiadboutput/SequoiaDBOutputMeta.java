@@ -34,7 +34,7 @@ import org.w3c.dom.Node;
 )
 
 public class SequoiaDBOutputMeta extends SequoiaDBMeta {
-   
+
    private static Class<?> PKG = SequoiaDBOutputMeta.class;// for i18n purposes
 
    private List<SequoiaDBOutputField> m_fields;
@@ -120,16 +120,16 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      }
 
      if ( m_fields != null && m_fields.size() > 0 ){
-        retval.append( "\n    ").append( XMLHandler.openTag( "selected_fields" ));
+        retval.append( "    ").append( XMLHandler.openTag( "selected_fields" ));
         for ( SequoiaDBOutputField f : m_fields ){
-           retval.append("\n      ").append(XMLHandler.openTag( "selected_field" ));
-           retval.append("\n        ").append(
+           retval.append("      ").append(XMLHandler.openTag( "selected_field" ));
+           retval.append("        ").append(
                  XMLHandler.addTagValue( "field_name", f.m_fieldName));
-           retval.append("\n        ").append(
+           retval.append("        ").append(
                  XMLHandler.addTagValue( "field_path", f.m_path));
-           retval.append("\n      ").append(XMLHandler.closeTag( "selected_field" ));
+           retval.append("      ").append(XMLHandler.closeTag( "selected_field" ));
         }
-        retval.append("\n    ").append(XMLHandler.closeTag( "selected_fields" ));
+        retval.append("    ").append(XMLHandler.closeTag( "selected_fields" ));
      }
      return retval.toString();
    }
@@ -168,6 +168,7 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
            SequoiaDBOutputField fieldTmp = new SequoiaDBOutputField();
            fieldTmp.m_fieldName = XMLHandler.getTagValue( fieldNode, "field_name");
            fieldTmp.m_path = XMLHandler.getTagValue( fieldNode, "field_path");
+           fieldTmp.splitPath();
            m_fields.add(fieldTmp);
         }
      }
@@ -180,5 +181,4 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
    public List<SequoiaDBOutputField> getSelectedFields(){
       return m_fields;
    }
-   
 }
