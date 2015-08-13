@@ -26,7 +26,7 @@ import org.w3c.dom.Node;
 
 @Step(   
       id = "SequoiaDBOutput",
-      image = "org/pentaho/di/trans/steps/SequoiaDB.png",
+      image = "org/pentaho/di/trans/steps/import.png",
       i18nPackageName="org.pentaho.di.trans.steps.sequoiadboutput",
       name="SequoiaDBOutput.Name",
       description = "SequoiaDBOutput.TooltipDesc",
