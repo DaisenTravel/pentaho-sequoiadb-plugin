@@ -1,10 +1,15 @@
 package org.pentaho.di.trans.steps.sequoiadbinput;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Iterator;
 
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
+import org.bson.types.BasicBSONList;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMeta;
@@ -121,15 +126,19 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
       if(m_cursor.hasNext())
       {
          BSONObject obj = m_cursor.getNext();
+
          if( m_isOutputJson ){
-            String json = obj.toString();
-            Object row[] = RowDataUtil.allocateRowData(m_data.outputRowMeta.size());;
-            row[0]=json;
-            putRow(data.outputRowMeta, row);
+             String json = obj.toString();
+             Object row[] = RowDataUtil.allocateRowData(m_data.outputRowMeta.size());
+             row[0]=json;
+             putRow(data.outputRowMeta,row);
          }
          else{
-            Object[] row = data.BSONToKettle( obj, meta.getSelectedFields() ) ;
-            putRow(data.outputRowMeta,row);
+	     List<BSONObject> objList = expandBSONArray( obj ) ;
+             for ( BSONObject o : objList ) {
+                 Object[] row = data.BSONToKettle( o, meta.getSelectedFields() ) ;
+                 putRow(data.outputRowMeta,row);
+             }
          }
       }
       else{
@@ -151,5 +160,63 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
 
       // indicate that processRow() should be called again
       return true;
+	}
+	
+	private List<BSONObject> expandBSONArray( BSONObject obj ) {
+		
+		List<BSONObject> objList = null;
+		List<BSONObject> total = new ArrayList<BSONObject>();
+		Set<String> sets = obj.keySet() ;
+		for ( String str : sets ) {
+			if ( null == objList ) {
+				Object v = obj.get(str);
+				BasicBSONObject o = new BasicBSONObject() ;
+				objList = genBSONObject(o, str, v);
+			}
+			else {
+				total.clear();
+				for ( BSONObject bo : objList ) {
+					
+					Object v = obj.get(str);
+					List<BSONObject> loop = genBSONObject(bo, str, v);
+					total.addAll(loop);
+				}
+				objList.clear();
+				objList.addAll(total);
+			}
+		}
+		
+		if ( !objList.isEmpty() ) {
+			total = objList;
+		}
+		
+		return total;
+	}
+
+	private List<BSONObject> genBSONObject( BSONObject obj, String keyName, Object v ) {
+		
+		List<BSONObject> objList = new ArrayList<BSONObject>();
+		if( v instanceof BasicBSONList ) {
+			BasicBSONList l = (BasicBSONList) v ;
+			Set<String> set = l.keySet();
+			for( String str : set ) {
+				BasicBSONObject o = new BasicBSONObject() ;
+				if ( !obj.isEmpty() ) {
+					o.putAll( obj );
+				}
+				o.append(keyName, l.get(str));
+				objList.add(o);
+			}
+		}
+		else
+		{
+			BasicBSONObject o = new BasicBSONObject() ;
+			if ( !obj.isEmpty() ) {
+				o.putAll( obj );
+			}
+			o.append(keyName, v);
+			objList.add(o);
+		}
+		return objList;
 	}
 }

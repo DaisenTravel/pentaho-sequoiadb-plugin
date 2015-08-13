@@ -140,18 +140,18 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
      }
 
      if ( m_fields != null && m_fields.size() > 0 ){
-        retval.append( "\n    ").append( XMLHandler.openTag( "selected_fields" ));
+        retval.append( "    ").append( XMLHandler.openTag( "selected_fields" ));
         for ( SequoiaDBInputField f : m_fields ){
-           retval.append("\n      ").append(XMLHandler.openTag( "selected_field" ));
-           retval.append("\n        ").append(
+           retval.append("      ").append(XMLHandler.openTag( "selected_field" ));
+           retval.append("        ").append(
                  XMLHandler.addTagValue( "field_name", f.m_fieldName));
-           retval.append("\n        ").append(
+           retval.append("        ").append(
                  XMLHandler.addTagValue( "field_path", f.m_path));
-           retval.append("\n        ").append(
+           retval.append("        ").append(
                  XMLHandler.addTagValue( "field_type", f.m_kettleType));
-           retval.append("\n      ").append(XMLHandler.closeTag( "selected_field" ));
+           retval.append("      ").append(XMLHandler.closeTag( "selected_field" ));
         }
-        retval.append("\n    ").append(XMLHandler.closeTag( "selected_fields" ));
+        retval.append("    ").append(XMLHandler.closeTag( "selected_fields" ));
      }
      return retval.toString();
    }
