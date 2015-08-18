@@ -56,23 +56,27 @@ public class SequoiaDBOutputField{
    }
    
    public void splitPath() {
-	   
-	   m_pathField = new ArrayList<String>();
-	   int begin = 0;
-	   int dotPos = 0;
-	   int length = m_path.length();
-	   while (begin < length -1) {
-		   
-		   dotPos = m_path.indexOf('.', begin);
-		   if ( -1 == dotPos ) {
-			   m_pathField.add(m_path.substring(begin));
-			   break;
-		   }
-		   else {
-			   String str = m_path.substring(begin, dotPos);
-			   m_pathField.add(str);
-			   begin = dotPos + 1;
-		   }
-	   }
+
+      m_pathField = new ArrayList<String>();
+      int begin = 0;
+      int dotPos = 0;
+      if( null == m_path ) {
+         return ;
+      }     
+      m_pathField = new ArrayList<String>();
+      int length = m_path.length();
+      while (begin < length ) {
+
+         dotPos = m_path.indexOf('.', begin);
+         if ( -1 == dotPos ) {
+            m_pathField.add(m_path.substring(begin));
+            break;
+         }
+         else {
+            String str = m_path.substring(begin, dotPos);
+            m_pathField.add(str);
+            begin = dotPos + 1;
+         }
+      }
    }
 }
