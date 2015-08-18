@@ -45,9 +45,11 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
    private List<SequoiaDBInputField> m_fields;
    
    public void init( RowMetaInterface outputRowMeta) throws KettlePluginException{
-      for( SequoiaDBInputField f:m_fields){
-         int outputIndex = outputRowMeta.indexOfValue( f.m_fieldName );
-         f.init( outputIndex );
+      if ( null != m_fields ) {
+         for( SequoiaDBInputField f:m_fields){
+            int outputIndex = outputRowMeta.indexOfValue( f.m_fieldName );
+            f.init( outputIndex );
+         }
       }
    }
 

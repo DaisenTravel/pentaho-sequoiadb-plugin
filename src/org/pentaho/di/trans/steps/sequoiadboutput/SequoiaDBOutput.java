@@ -107,23 +107,27 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
 
          // check if match the input fields
          List<SequoiaDBOutputField> selectedFields = m_meta.getSelectedFields();
-         checkFields( rmi, selectedFields ) ;
+         if ( null != selectedFields ) {
+            checkFields( rmi, selectedFields ) ;
+         }
       }
 
       // log progress if it is time to to so
       if (checkFeedback(getLinesRead())) {
          logBasic("Linenr " + getLinesRead()); // Some basic logging
       }
-      
-      BSONObject recObj = m_data.kettleToBson( r,
-                                 m_meta.getSelectedFields() );
-      if ( recObj != null ) {
-         m_buffer.add( recObj ) ;
-      }
+      List<SequoiaDBOutputField> l = m_meta.getSelectedFields() ;
+      if ( null != l && 0 != l.size() ) {
+         BSONObject recObj = m_data.kettleToBson( r,
+                                                  m_meta.getSelectedFields() );
+         if ( recObj != null ) {
+             m_buffer.add( recObj ) ;
+          }
 
-      if ( m_buffer.size() >= m_bulkInsertSize ){
-         flushToDB() ;
-      }
+          if ( m_buffer.size() >= m_bulkInsertSize ){
+             flushToDB() ;
+          }
+      }   
 
       // indicate that processRow() should be called again
       return true;
