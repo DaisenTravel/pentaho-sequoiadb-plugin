@@ -15,8 +15,8 @@
  */
 package org.pentaho.di.ui.trans.steps.sequoiadboutput;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -43,12 +43,13 @@ import org.eclipse.swt.widgets.Text;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.Props;
 import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStepMeta;
 import org.pentaho.di.trans.step.StepDialogInterface;
-import org.pentaho.di.trans.steps.sequoiadboutput.SequoiaDBOutputField;
+import org.pentaho.di.trans.steps.sequoiadboutput.SequoiaDBOutputFieldInfo;
 import org.pentaho.di.trans.steps.sequoiadboutput.SequoiaDBOutputMeta;
 import org.pentaho.di.ui.core.dialog.ErrorDialog;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
@@ -445,33 +446,50 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       
       int numFields = m_fieldsView.nrNonEmpty();
       if (numFields > 0){
-         List<SequoiaDBOutputField> selectedFields = new ArrayList<SequoiaDBOutputField>();
+         m_meta.clearFields();
          for (int i = 0; i < numFields; i++) {
             TableItem item = m_fieldsView.getNonEmpty(i);
-            SequoiaDBOutputField fieldTmp = new SequoiaDBOutputField();
-            fieldTmp.m_fieldName = item.getText(1).trim();
-            fieldTmp.m_path = item.getText(2).trim();
-            selectedFields.add(fieldTmp);
+            try {
+               m_meta.addSelectedField(item.getText(1).trim(), item.getText(2).trim() ) ;
+            } catch (KettleValueException e) {
+               logError( BaseMessages.getString( PKG, "System.Dialog.GetFieldsFailed.Message" ), //$NON-NLS-1$
+                     e );
+               new ErrorDialog( shell,
+                     BaseMessages.getString( PKG, "System.Dialog.GetFieldsFailed.Title" ), BaseMessages.getString( PKG, //$NON-NLS-1$
+                         "System.Dialog.GetFieldsFailed.Message" ), e ); 
+            }
          }
-         m_meta.setSelectedFields(selectedFields);
+         try {
+            m_meta.done();
+         } catch (KettleValueException e) {
+            logError( BaseMessages.getString( PKG, "System.Dialog.GetFieldsFailed.Message" ), //$NON-NLS-1$
+                  e );
+            new ErrorDialog( shell,
+                  BaseMessages.getString( PKG, "System.Dialog.GetFieldsFailed.Title" ), BaseMessages.getString( PKG, //$NON-NLS-1$
+                      "System.Dialog.GetFieldsFailed.Message" ), e );
+         }
       }
    }
    
-   private void setSelectedFields(List<SequoiaDBOutputField> fields) {
+   private void setSelectedFields(Map<String, SequoiaDBOutputFieldInfo> fields) {
       if (null == fields) {
          return ;
       }
       
       m_fieldsView.clearAll();
-      for (SequoiaDBOutputField f : fields){
-         TableItem item = new TableItem(m_fieldsView.table, SWT.NONE);
-         
-         if(!Const.isEmpty(f.m_fieldName)){
-            item.setText(1, f.m_fieldName);
-         }
-         
-         if(!Const.isEmpty(f.m_path)){
-            item.setText(2, f.m_path);
+      for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fields.entrySet() ){
+         List<String> fieldsPath = entry.getValue().getFieldPath() ;
+         int numFieldsPath = fieldsPath.size() ;
+         for ( int i = 0 ; i < numFieldsPath ; i++ ){
+            TableItem item = new TableItem(m_fieldsView.table, SWT.NONE);
+            
+            if(!Const.isEmpty(entry.getKey())){
+               item.setText(1, entry.getKey());
+            }
+            
+            if(!Const.isEmpty(fieldsPath.get(i))){
+               item.setText(2, fieldsPath.get(i));
+            }
          }
       }
       

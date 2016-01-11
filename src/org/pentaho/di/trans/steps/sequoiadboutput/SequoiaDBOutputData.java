@@ -18,6 +18,7 @@ package org.pentaho.di.trans.steps.sequoiadboutput;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
@@ -38,38 +39,8 @@ public class SequoiaDBOutputData extends BaseStepData implements StepDataInterfa
       m_outputRowMeta = outMeta;
     }
    
-   public BSONObject kettleToBson( Object[] row, List<SequoiaDBOutputField> fields ) throws KettleValueException{
-      Object valTmp = null ;
-
-      BSONObject result = new BasicBSONObject() ;
-      for ( SequoiaDBOutputField f : fields ){
-         int index = m_outputRowMeta.indexOfValue( f.m_fieldName ) ;
-         ValueMetaInterface vmi = m_outputRowMeta.getValueMeta( index ) ;
-         try{
-            valTmp = f.getBsonValue( row[index], vmi ) ;
-            Iterator<String> it = f.m_pathField.iterator();
-            BSONObject subObj = null;
-            // skip first path
-            String fieldName = it.next();
-            if ( it.hasNext() ) {
-            	String str = it.next();
-            	subObj = makeBSONObject(it, str, result.get(fieldName), valTmp);
-            }
-
-            if (null != subObj) {
-            	result.put(fieldName, subObj);
-            }
-            else {
-            	result.put( fieldName, valTmp ) ;
-            }
-         }
-         catch( KettleValueException e ){
-            throw new KettleValueException( BaseMessages.getString( PKG,
-                  "SequoiaDBOutput.Msg.Err.FailedToGetTheFieldVal"
-                  + "(" + f.m_fieldName + ":" + row[index].toString() + ")" ) );
-         }
-      }
-      return result ;
+   public BSONObject kettleToBson( Object[] row, SequoiaDBOutputRecordInfo recordInfo ) throws KettleValueException{
+      return recordInfo.toBson( row, m_outputRowMeta ) ;
    }
    
    public BSONObject makeBSONObject( Iterator<String> it, String key,

@@ -15,15 +15,17 @@
  */
 package org.pentaho.di.trans.steps.sequoiadboutput;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.swt.widgets.Shell;
 import org.pentaho.di.core.annotations.Step;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.exception.KettleXMLException;
 import org.pentaho.di.core.xml.XMLHandler;
+import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.repository.ObjectId;
 import org.pentaho.di.repository.Repository;
 import org.pentaho.di.trans.Trans;
@@ -51,7 +53,7 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
 
    private static Class<?> PKG = SequoiaDBOutputMeta.class;// for i18n purposes
 
-   private List<SequoiaDBOutputField> m_fields;
+   private SequoiaDBOutputRecordInfo m_fields = null;
 
    public StepDialogInterface getDialog(Shell shell, StepMetaInterface meta, TransMeta transMeta, String name) {
       return new SequoiaDBOutputDialog(shell, meta, transMeta, name);
@@ -81,11 +83,19 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
       rep.saveStepAttribute( id_transformation, id_step, "CSName", getCSName() );
       rep.saveStepAttribute( id_transformation, id_step, "CLName", getCLName() );
       
-      if ( m_fields != null && m_fields.size() > 0 ){
-         for ( int i = 0; i < m_fields.size(); i++ ){
-            SequoiaDBOutputField fieldTmp = m_fields.get(i);
-            rep.saveStepAttribute(id_transformation, id_step, i, "field_name", fieldTmp.m_fieldName);
-            rep.saveStepAttribute(id_transformation, id_step, i, "field_path", fieldTmp.m_path);
+      Map<String, SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
+      if ( fieldsInfo != null && fieldsInfo.size() > 0 ){
+         int i = 0 ;
+         for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fieldsInfo.entrySet() ){
+            List<String> fieldPathList = entry.getValue().getFieldPath() ;
+            int fieldPathNum = fieldPathList.size() ;
+            for( int j = 0 ; j < fieldPathNum ; j++ ){
+               rep.saveStepAttribute( id_transformation, id_step, i, "field_name",
+                                      entry.getKey() );
+               rep.saveStepAttribute( id_transformation, id_step, i, "field_path",
+                                      fieldPathList.get(j) );
+               ++i ;
+            }
          }
       }
    }
@@ -100,13 +110,12 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
 
       int numFields = rep.countNrStepAttributes(id_step, "field_name");
       if(numFields > 0){
-         m_fields = new ArrayList<SequoiaDBOutputField>();
+         m_fields = new SequoiaDBOutputRecordInfo();
          for( int i = 0; i < numFields; i++){
-            SequoiaDBOutputField fieldTmp = new SequoiaDBOutputField();
-            fieldTmp.m_fieldName = rep.getStepAttributeString(id_step, i, "field_name");
-            fieldTmp.m_path = rep.getStepAttributeString(id_step, i, "field_path");
-            m_fields.add(fieldTmp);
+            m_fields.addField( rep.getStepAttributeString(id_step, i, "field_name"),
+                  rep.getStepAttributeString(id_step, i, "field_path") );
          }
+         m_fields.done() ;
       }
    }
 
@@ -133,15 +142,20 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
         retval.append( "    " ).append( XMLHandler.addTagValue( "CLName", getCLName() ) );
      }
 
-     if ( m_fields != null && m_fields.size() > 0 ){
+     Map<String, SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
+     if ( fieldsInfo != null && fieldsInfo.size() > 0 ){
         retval.append( "    ").append( XMLHandler.openTag( "selected_fields" ));
-        for ( SequoiaDBOutputField f : m_fields ){
-           retval.append("      ").append(XMLHandler.openTag( "selected_field" ));
-           retval.append("        ").append(
-                 XMLHandler.addTagValue( "field_name", f.m_fieldName));
-           retval.append("        ").append(
-                 XMLHandler.addTagValue( "field_path", f.m_path));
-           retval.append("      ").append(XMLHandler.closeTag( "selected_field" ));
+        for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fieldsInfo.entrySet() ){
+           List<String> fieldPathList = entry.getValue().getFieldPath() ;
+           int fieldPathNum = fieldPathList.size() ;
+           for( int j = 0 ; j < fieldPathNum ; j++ ){
+              retval.append("      ").append(XMLHandler.openTag( "selected_field" ));
+              retval.append("        ").append(
+                    XMLHandler.addTagValue( "field_name", entry.getKey()));
+              retval.append("        ").append(
+                    XMLHandler.addTagValue( "field_path", fieldPathList.get(j)));
+              retval.append("      ").append(XMLHandler.closeTag( "selected_field" ));
+           }
         }
         retval.append("    ").append(XMLHandler.closeTag( "selected_fields" ));
      }
@@ -175,24 +189,51 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      Node selectedFields = XMLHandler.getSubNode( stepnode, "selected_fields");
      if ( selectedFields != null && XMLHandler.countNodes(selectedFields, "selected_field") > 0 ){
         int numFields = XMLHandler.countNodes(selectedFields, "selected_field");
-        
-        m_fields = new ArrayList<SequoiaDBOutputField>();
+        m_fields = new SequoiaDBOutputRecordInfo();
         for ( int i = 0; i < numFields; i++ ){
            Node fieldNode = XMLHandler.getSubNodeByNr( selectedFields, "selected_field", i);
-           SequoiaDBOutputField fieldTmp = new SequoiaDBOutputField();
-           fieldTmp.m_fieldName = XMLHandler.getTagValue( fieldNode, "field_name");
-           fieldTmp.m_path = XMLHandler.getTagValue( fieldNode, "field_path");
-           fieldTmp.splitPath();
-           m_fields.add(fieldTmp);
+           try {
+              m_fields.addField( XMLHandler.getTagValue( fieldNode, "field_name"),
+                                 XMLHandler.getTagValue( fieldNode, "field_path") );
+           } catch (KettleValueException e) {
+              e.printStackTrace();
+              throw new KettleXMLException( BaseMessages.getString( PKG,
+                                            "SequoiaDBOutput.Msg.Err.FailedToAddField",
+                                            XMLHandler.getTagValue( fieldNode, "field_name"),
+                                            XMLHandler.getTagValue( fieldNode, "field_path") ));
+           }
         }
+        try {
+         m_fields.done();
+      } catch (KettleValueException e) {
+         throw new KettleXMLException( e.toString() );
+      }
      }
    }
    
-   public void setSelectedFields(List<SequoiaDBOutputField> fields){
-      m_fields = fields;
+   public void addSelectedField( String srcFieldName, String fieldPath ) throws KettleValueException{
+      if ( null == m_fields ){
+         m_fields = new SequoiaDBOutputRecordInfo();
+      }
+      m_fields.addField( srcFieldName, fieldPath );
    }
-
-   public List<SequoiaDBOutputField> getSelectedFields(){
-      return m_fields;
+   
+   public void done() throws KettleValueException{
+      m_fields.done() ;
+   }
+   
+   public Map<String, SequoiaDBOutputFieldInfo> getSelectedFields(){
+      if ( null == m_fields ){
+         return null ;
+      }
+      return m_fields.getFieldsInfo() ;
+   }
+   
+   public SequoiaDBOutputRecordInfo getOutputRecordInfo(){
+      return m_fields ;
+   }
+   
+   public void clearFields(){
+      m_fields = new SequoiaDBOutputRecordInfo();
    }
 }

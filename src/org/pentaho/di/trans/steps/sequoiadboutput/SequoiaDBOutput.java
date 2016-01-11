@@ -18,11 +18,11 @@ package org.pentaho.di.trans.steps.sequoiadboutput;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.bson.BSONObject;
 import org.pentaho.di.core.exception.KettleException;
-import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.Trans;
@@ -121,7 +121,7 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
          m_data.setOutputRowMeta( rmi ) ;
 
          // check if match the input fields
-         List<SequoiaDBOutputField> selectedFields = m_meta.getSelectedFields();
+         Map<String, SequoiaDBOutputFieldInfo> selectedFields = m_meta.getSelectedFields();
          if ( null != selectedFields ) {
             checkFields( rmi, selectedFields ) ;
          }
@@ -131,10 +131,10 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
       if (checkFeedback(getLinesRead())) {
          logBasic("Linenr " + getLinesRead()); // Some basic logging
       }
-      List<SequoiaDBOutputField> l = m_meta.getSelectedFields() ;
+      Map<String, SequoiaDBOutputFieldInfo> l = m_meta.getSelectedFields() ;
       if ( null != l && 0 != l.size() ) {
          BSONObject recObj = m_data.kettleToBson( r,
-                                                  m_meta.getSelectedFields() );
+                                                  m_meta.getOutputRecordInfo() );
          if ( recObj != null ) {
              m_buffer.add( recObj ) ;
           }
@@ -155,17 +155,15 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
       }
    }
    
-   void checkFields( RowMetaInterface rmi, List<SequoiaDBOutputField> fields ) throws KettleException {
+   void checkFields( RowMetaInterface rmi, Map<String, SequoiaDBOutputFieldInfo> fields ) throws KettleException {
       // check if match input fields
       if ( rmi.getFieldNames().length <= 0 || rmi.getFieldNames().length < fields.size() ) {
          throw new KettleException( BaseMessages.getString( PKG,
                "SequoiaDBOutput.Msg.Err.InputFieldsSizeError" )) ;
       }
-      
-      if ( conflict(fields) ) {
-    	  throw new KettleException( BaseMessages.getString( PKG,
-                  "SequoiaDBOutput.Msg.Err.FailedToWriteTheFieldVal"
-                  + "the field path is conflict" ) );
+      if( fields.size() <= 0 ){
+         throw new KettleException( BaseMessages.getString( PKG,
+               "SequoiaDBOutput.Msg.Err.OutputFieldsEmpty" )) ;
       }
       
       Set<String> input = new HashSet<String>( rmi.getFieldNames().length, 1 ) ;
@@ -173,8 +171,8 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
       for( int i = 0; i < rmi.size(); i++ ) {
          input.add( rmi.getValueMeta( i ).getName() );
       }
-      for ( SequoiaDBOutputField f : fields ) {
-         output.add( f.m_fieldName ) ;
+      for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fields.entrySet() ){
+         output.add( entry.getKey() ) ;
       }
       
       if ( !input.containsAll( output )) {
@@ -186,26 +184,5 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
          throw new KettleException( BaseMessages.getString( PKG,
                "SequoiaDBOutput.Msg.Err.FieldsNotFoundInInput", loseFields.toString() ));
       }
-   }
-   
-   public boolean conflict(List<SequoiaDBOutputField> fields) {
-	   List<String> pathField = new ArrayList<String>();
-	   for ( SequoiaDBOutputField row : fields) {
-		   pathField.add(row.m_path);
-	   }
-	   
-	   if ( !pathField.isEmpty() && pathField.size() >= 2 ) {
-		   int size = pathField.size();
-		   for (int i = 0; i < size; ++i) {
-			   for(int j = i+1; j < size; ++j) {
-				   if (    pathField.get(i).indexOf(pathField.get(j)) == 0
-						|| pathField.get(j).indexOf(pathField.get(i)) == 0) {
-					   return true;
-				   }
-			   }
-		   }
-	   }
-		   
-	   return false;
    }
 }
