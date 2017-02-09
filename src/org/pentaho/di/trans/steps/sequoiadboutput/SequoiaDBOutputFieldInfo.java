@@ -57,7 +57,7 @@ public class SequoiaDBOutputFieldInfo {
          return retObj ;
       }
       if ( vmi.isBigNumber() ) {
-         retObj = vmi.getString( input ) ;
+         retObj = vmi.getBigNumber( input ) ;
          return retObj ;
       }
       if ( vmi.isBinary() ) {

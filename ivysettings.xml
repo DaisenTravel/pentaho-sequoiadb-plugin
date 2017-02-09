@@ -7,6 +7,7 @@
     
   <!-- Repository for Pentaho-hosted artifacts -->  
   <property name="pentaho.resolve.repo" value="http://ivy-nexus.pentaho.org/content/groups/omni" override="false" />
+  <property name="sequoiadb.resolve.repo" value="http://cloud.sequoiadb.com/content/groups/omni/" override="false" />
   <!-- Repository for External-hosted artifacts (Optional. Defaults to Pentaho-hosted.) -->
   <property name="public.resolve.repo" value="${pentaho.resolve.repo}" override="false" />
 
@@ -21,6 +22,12 @@
           <ivy pattern="${pentaho.resolve.repo}/[organisation]/[module]/[revision]/[module]-[revision].ivy.xml" />
         </url>
         <ibiblio name="pentaho-mvn" m2compatible="true" root="${pentaho.resolve.repo}" />
+      </dual>
+      <dual name="sequoiadb">
+        <url name="pentaho-ivy" checkmodified="true" changingPattern="*-SNAPSHOT">
+          <ivy pattern="${pentaho.resolve.repo}/[organisation]/[module]/[revision]/[module]-[revision].ivy.xml" />
+        </url>
+        <ibiblio name="sequoiadb-mvn" m2compatible="true" root="${sequoiadb.resolve.repo}" />
       </dual>
       <ibiblio name="public-maven" root="${public.resolve.repo}" m2compatible="true" />
     </chain>
