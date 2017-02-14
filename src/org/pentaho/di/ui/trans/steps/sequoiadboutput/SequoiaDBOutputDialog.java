@@ -68,8 +68,11 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
 
    private TextVar m_wHostname;
    private TextVar m_wPort;
+   private TextVar m_wUsername;
+   private TextVar m_wPassword;
    private TextVar m_wCSName;
    private TextVar m_wCLName;
+   private TextVar m_wBulkInsertSize ;
    private TableView m_fieldsView;
    private Button m_getFieldsBut;
 
@@ -197,6 +200,48 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       lastControl = m_wPort;
       wConnComp.setLayoutData(fdPort);
 
+      // User Name
+      Label wlUsername = new Label(wConnComp, SWT.RIGHT);
+      wlUsername.setText(BaseMessages.getString(PKG, "SequoiaDBOutput.Username.Label"));
+      props.setLook(wlUsername);
+      FormData fdlUsername = new FormData();
+      fdlUsername.left = new FormAttachment(0, 0);
+      fdlUsername.right = new FormAttachment(middle, -margin);
+      fdlUsername.top = new FormAttachment(lastControl, margin);
+      wlUsername.setLayoutData(fdlUsername);
+      m_wUsername = new TextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
+                                | SWT.BORDER);
+      props.setLook(m_wUsername);
+      m_wUsername.addModifyListener(lsMod);
+      FormData fdUsername = new FormData();
+      fdUsername.left = new FormAttachment(middle, 0);
+      fdUsername.top = new FormAttachment(lastControl, margin);
+      fdUsername.right = new FormAttachment(100, 0);
+      m_wUsername.setLayoutData(fdUsername);
+      lastControl = m_wUsername;
+      wConnComp.setLayoutData(fdUsername);
+
+      // Password
+      Label wlPassword = new Label(wConnComp, SWT.RIGHT);
+      wlPassword.setText(BaseMessages.getString(PKG, "SequoiaDBOutput.Password.Label"));
+      props.setLook(wlPassword);
+      FormData fdlPassword = new FormData();
+      fdlPassword.left = new FormAttachment(0, 0);
+      fdlPassword.right = new FormAttachment(middle, -margin);
+      fdlPassword.top = new FormAttachment(lastControl, margin);
+      wlPassword.setLayoutData(fdlPassword);
+      m_wPassword = new TextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
+                                | SWT.BORDER);
+      props.setLook(m_wPassword);
+      m_wPassword.addModifyListener(lsMod);
+      FormData fdPassword = new FormData();
+      fdPassword.left = new FormAttachment(middle, 0);
+      fdPassword.top = new FormAttachment(lastControl, margin);
+      fdPassword.right = new FormAttachment(100, 0);
+      m_wPassword.setLayoutData(fdPassword);
+      lastControl = m_wPassword;
+      wConnComp.setLayoutData(fdPassword);
+
       wConnComp.layout();
       m_wSdbConnectionTab.setControl(wConnComp);
 
@@ -252,6 +297,27 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       m_wCLName.setLayoutData(fdCLName);
       lastControl = m_wCLName;
       wOutputComp.setLayoutData(fdCLName);
+      
+      // Bulk Insert Size
+      Label wlBulkInsertSize = new Label(wOutputComp, SWT.RIGHT);
+      wlBulkInsertSize.setText(BaseMessages.getString(PKG, "SequoiaDBOutput.BulkInsertSize.Label"));
+      props.setLook(wlBulkInsertSize);
+      FormData fdlBulkInsertSize = new FormData();
+      fdlBulkInsertSize.left = new FormAttachment(0, 0);
+      fdlBulkInsertSize.right = new FormAttachment(middle, -margin);
+      fdlBulkInsertSize.top = new FormAttachment(lastControl, margin);
+      wlBulkInsertSize.setLayoutData(fdlBulkInsertSize);
+      m_wBulkInsertSize = new TextVar(transMeta, wOutputComp, SWT.SINGLE | SWT.LEFT
+                                    | SWT.BORDER);
+      props.setLook(m_wBulkInsertSize);
+      m_wBulkInsertSize.addModifyListener(lsMod);
+      FormData fdBulkInsertSize = new FormData();
+      fdBulkInsertSize.left = new FormAttachment(middle, 0);
+      fdBulkInsertSize.top = new FormAttachment(lastControl, margin);
+      fdBulkInsertSize.right = new FormAttachment(100, 0);
+      m_wBulkInsertSize.setLayoutData(fdBulkInsertSize);
+      lastControl = m_wBulkInsertSize;
+      wOutputComp.setLayoutData(fdBulkInsertSize);
       
       wOutputComp.layout();
       m_wSdbOutputTab.setControl(wOutputComp);
@@ -431,8 +497,11 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
    private void populateDialog() {
       m_wHostname.setText(Const.NVL(m_meta.getHostname(), ""));
       m_wPort.setText(Const.NVL(m_meta.getPort(), ""));
+      m_wUsername.setText(Const.NVL(m_meta.getUserName(), ""));
+      m_wPassword.setText(Const.NVL(m_meta.getPwd(), ""));
       m_wCSName.setText(Const.NVL(m_meta.getCSName(), ""));
       m_wCLName.setText(Const.NVL(m_meta.getCLName(), ""));
+      m_wBulkInsertSize.setText(Const.NVL(m_meta.getBulkInsertSizeStr(), ""));
       wStepname.selectAll();
       setSelectedFields(m_meta.getSelectedFields());
    }
@@ -441,8 +510,11 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
    {
       m_meta.setHostname(m_wHostname.getText());
       m_meta.setPort(m_wPort.getText());
+      m_meta.setUserName(m_wUsername.getText());
+      m_meta.setPwd(m_wPassword.getText());
       m_meta.setCSName(m_wCSName.getText());
       m_meta.setCLName(m_wCLName.getText());
+      m_meta.setBulkInsertSize(m_wBulkInsertSize.getText());
       
       int numFields = m_fieldsView.nrNonEmpty();
       if (numFields > 0){

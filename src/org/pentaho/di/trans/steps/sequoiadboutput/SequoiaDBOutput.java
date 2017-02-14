@@ -47,8 +47,7 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
 
    private DBCollection m_cl ;
 
-   // TODO: get bulkInsertSize from dialog
-   protected int m_bulkInsertSize = 100 ;
+   protected int m_bulkInsertSize ;
    private List<BSONObject> m_buffer ;
 
    public SequoiaDBOutput(StepMeta stepMeta,
@@ -66,7 +65,7 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
          String connString = environmentSubstitute(m_meta.getHostname())
                + ":" + environmentSubstitute(m_meta.getPort());
          Sequoiadb sdb = null;
-         sdb = new Sequoiadb(connString, "", "");
+         sdb = new Sequoiadb(connString, m_meta.getUserName(), m_meta.getPwd());
          CollectionSpace cs ;
          if(!sdb.isCollectionSpaceExist(m_meta.getCSName())){
             cs = sdb.createCollectionSpace( m_meta.getCSName() );
@@ -81,6 +80,8 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
          else{
             m_cl = cs.getCollection( m_meta.getCLName() );
          }
+         
+         m_bulkInsertSize = m_meta.getBulkInsertSize();
          return true;
       }
       return false;
