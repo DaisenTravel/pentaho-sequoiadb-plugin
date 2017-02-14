@@ -24,8 +24,10 @@ public abstract class SequoiaDBMeta extends BaseStepMeta implements StepMetaInte
 
    private String m_hostname = "localhost";
    private String m_port = "11810";
-   private String m_CSName;
-   private String m_CLName;
+   private String m_CSName = "";
+   private String m_CLName = "";
+   private String m_username = "";
+   private String m_pwd = "";
 
    @Override
    public Object clone() {
@@ -34,6 +36,8 @@ public abstract class SequoiaDBMeta extends BaseStepMeta implements StepMetaInte
       retval.m_port = m_port;
       retval.m_CSName = m_CSName;
       retval.m_CLName = m_CLName;
+      retval.m_username = m_username;
+      retval.m_pwd = m_pwd;
       return retval;
    }
    
@@ -68,4 +72,20 @@ public abstract class SequoiaDBMeta extends BaseStepMeta implements StepMetaInte
       public void setCLName(String CLName) {
         this.m_CLName = CLName;
       }
+      
+      public String getUserName() {
+         return m_username;
+       }
+
+       public void setUserName(String username) {
+         this.m_username = username;
+       }
+       
+       public String getPwd() {
+          return m_pwd;
+        }
+
+        public void setPwd(String pwd) {
+          this.m_pwd = pwd;
+        }
 }

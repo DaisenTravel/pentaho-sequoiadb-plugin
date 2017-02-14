@@ -54,9 +54,21 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
    private static Class<?> PKG = SequoiaDBOutputMeta.class;// for i18n purposes
 
    private SequoiaDBOutputRecordInfo m_fields = null;
+   
+   private static int BULK_INSERT_SIZE_DFT = 1000;
+
+   private int m_bulkInsertSize = BULK_INSERT_SIZE_DFT;
 
    public StepDialogInterface getDialog(Shell shell, StepMetaInterface meta, TransMeta transMeta, String name) {
       return new SequoiaDBOutputDialog(shell, meta, transMeta, name);
+   }
+
+   @Override
+   public Object clone() {
+      SequoiaDBOutputMeta retval =(SequoiaDBOutputMeta) super.clone();
+      retval.m_fields = m_fields;
+      retval.m_bulkInsertSize = m_bulkInsertSize;
+      return retval;
    }
 
    @Override
@@ -80,8 +92,11 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
    public void saveRep( Repository rep, IMetaStore metaStore, ObjectId id_transformation, ObjectId id_step ) throws KettleException{
       rep.saveStepAttribute( id_transformation, id_step, "hostname", getHostname() );
       rep.saveStepAttribute( id_transformation, id_step, "port", getPort() );
+      rep.saveStepAttribute( id_transformation, id_step, "sequoiadbusername", getUserName() );
+      rep.saveStepAttribute( id_transformation, id_step, "sequoiadbpassword", getPwd() );
       rep.saveStepAttribute( id_transformation, id_step, "CSName", getCSName() );
       rep.saveStepAttribute( id_transformation, id_step, "CLName", getCLName() );
+      rep.saveStepAttribute( id_transformation, id_step, "bulkinsertsize", getBulkInsertSizeStr() );
       
       Map<String, SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
       if ( fieldsInfo != null && fieldsInfo.size() > 0 ){
@@ -105,8 +120,11 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      throws KettleException {
       setHostname( rep.getStepAttributeString( id_step, "hostname" ) );
       setPort( rep.getStepAttributeString( id_step, "port" ) );
+      setUserName( rep.getStepAttributeString( id_step, "sequoiadbusername" ) );
+      setPwd( rep.getStepAttributeString( id_step, "sequoiadbpassword" ) );
       setCSName( rep.getStepAttributeString( id_step, "CSName" ) );
       setCLName( rep.getStepAttributeString( id_step, "CLName" ) );
+      setBulkInsertSize( rep.getStepAttributeString( id_step, "bulkinsertsize" ) );
 
       int numFields = rep.countNrStepAttributes(id_step, "field_name");
       if(numFields > 0){
@@ -132,6 +150,16 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
         retval.append( "    " ).append( XMLHandler.addTagValue( "port", getPort() ) );
      }
 
+     if ( null != getUserName() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "sequoiadbusername", getUserName() ) );
+     }
+
+     if ( null != getPwd() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "sequoiadbpassword", getPwd() ) );
+     }
+
      if ( null != getCSName() )
      {
         retval.append( "    " ).append( XMLHandler.addTagValue( "CSName", getCSName() ) );
@@ -141,6 +169,8 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      {
         retval.append( "    " ).append( XMLHandler.addTagValue( "CLName", getCLName() ) );
      }
+
+     retval.append( "    " ).append( XMLHandler.addTagValue( "bulkinsertsize", getBulkInsertSizeStr() ) );
 
      Map<String, SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
      if ( fieldsInfo != null && fieldsInfo.size() > 0 ){
@@ -175,6 +205,16 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      {
         setPort( strTmp );
      }
+     strTmp = XMLHandler.getTagValue( stepnode, "sequoiadbusername" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setUserName( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "sequoiadbpassword" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setPwd( strTmp );
+     }
      strTmp = XMLHandler.getTagValue( stepnode, "CSName" );
      if ( null != strTmp && !strTmp.isEmpty())
      {
@@ -184,6 +224,11 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      if ( null != strTmp && !strTmp.isEmpty())
      {
         setCLName( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "bulkinsertsize" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setBulkInsertSize( strTmp );
      }
      
      Node selectedFields = XMLHandler.getSubNode( stepnode, "selected_fields");
@@ -235,5 +280,28 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
    
    public void clearFields(){
       m_fields = new SequoiaDBOutputRecordInfo();
+   }
+   
+   public void setBulkInsertSize(String BulkInsertSize ){
+      try{
+         Integer tmp = Integer.valueOf(BulkInsertSize);
+         if (tmp != null){
+            m_bulkInsertSize = tmp.intValue() ;
+         }
+      }
+      catch(NumberFormatException e){
+         // Do nothing. Use the old value if input error.
+      }
+      if ( m_bulkInsertSize <= 0 ){
+         m_bulkInsertSize = BULK_INSERT_SIZE_DFT ;
+      }
+   }
+   
+   public int getBulkInsertSize(){
+      return m_bulkInsertSize ;
+   }
+   
+   public String getBulkInsertSizeStr(){
+      return Integer.toString( m_bulkInsertSize ) ;
    }
 }
