@@ -50,6 +50,7 @@ import org.pentaho.di.trans.step.StepDialogInterface;
 import org.pentaho.di.trans.steps.sequoiadbinput.SequoiaDBInputField;
 import org.pentaho.di.trans.steps.sequoiadbinput.SequoiaDBInputMeta;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
+import org.pentaho.di.ui.core.widget.StyledTextComp;
 import org.pentaho.di.ui.core.widget.TableView;
 import org.pentaho.di.ui.core.widget.TextVar;
 import org.pentaho.di.ui.trans.step.BaseStepDialog;
@@ -66,8 +67,15 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 
 	private TextVar m_wHostname;
 	private TextVar m_wPort;
+   private TextVar m_wUsername;
+   private TextVar m_wPassword;
 	private TextVar m_wCSName;
 	private TextVar m_wCLName;
+	private StyledTextComp m_wQuery;
+   private TextVar m_wSelector;
+   private TextVar m_wOrderby;
+   private TextVar m_wSkip;
+   private TextVar m_wLimit;
 	private TableView m_fieldsView;
 
 	private SequoiaDBInputMeta m_meta;
@@ -198,6 +206,48 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
       lastControl = m_wPort;
       wConnComp.setLayoutData(fdPort);
       
+      // Username
+      Label wlUsername = new Label(wConnComp, SWT.RIGHT);
+      wlUsername.setText(BaseMessages.getString(PKG, "SequoiaDBInput.Username.Label"));
+      props.setLook(wlUsername);
+      FormData fdlUsername = new FormData();
+      fdlUsername.left = new FormAttachment(0, 0);
+      fdlUsername.right = new FormAttachment(middle, -margin);
+      fdlUsername.top = new FormAttachment(lastControl, margin);
+      wlUsername.setLayoutData(fdlUsername);
+      m_wUsername = new TextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
+            | SWT.BORDER);
+      props.setLook(m_wUsername);
+      m_wUsername.addModifyListener(lsMod);
+      FormData fdUsername = new FormData();
+      fdUsername.left = new FormAttachment(middle, 0);
+      fdUsername.top = new FormAttachment(lastControl, margin);
+      fdUsername.right = new FormAttachment(100, 0);
+      m_wUsername.setLayoutData(fdUsername);
+      lastControl = m_wUsername;
+      wConnComp.setLayoutData(fdUsername);
+      
+      // Password
+      Label wlPassword = new Label(wConnComp, SWT.RIGHT);
+      wlPassword.setText(BaseMessages.getString(PKG, "SequoiaDBInput.Password.Label"));
+      props.setLook(wlPassword);
+      FormData fdlPassword = new FormData();
+      fdlPassword.left = new FormAttachment(0, 0);
+      fdlPassword.right = new FormAttachment(middle, -margin);
+      fdlPassword.top = new FormAttachment(lastControl, margin);
+      wlPassword.setLayoutData(fdlPassword);
+      m_wPassword = new TextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
+            | SWT.BORDER);
+      props.setLook(m_wPassword);
+      m_wPassword.addModifyListener(lsMod);
+      FormData fdPassword = new FormData();
+      fdPassword.left = new FormAttachment(middle, 0);
+      fdPassword.top = new FormAttachment(lastControl, margin);
+      fdPassword.right = new FormAttachment(100, 0);
+      m_wPassword.setLayoutData(fdPassword);
+      lastControl = m_wPassword;
+      wConnComp.setLayoutData(fdPassword);
+      
       wConnComp.layout();
       m_wSdbConnectionTab.setControl(wConnComp);
 
@@ -257,6 +307,127 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
       wInputComp.layout();
       m_wSdbInputTab.setControl(wInputComp);
 
+      // *************Query tab***********
+      m_wSdbQueryTab = new CTabItem(m_wTabFolder, SWT.NONE);
+      m_wSdbQueryTab.setText(BaseMessages.getString(PKG,
+            "SequoiaDBInput.QueryTab.Title"));
+      Composite wQueryComp = new Composite(m_wTabFolder, SWT.NONE);
+      props.setLook(wQueryComp);
+      FormLayout queryLayout = new FormLayout();
+      queryLayout.marginWidth = 3;
+      queryLayout.marginHeight = 3;
+      wQueryComp.setLayout(queryLayout);
+      
+      // Query expression(JSON)
+      Label wlQuery = new Label(wQueryComp, SWT.LEFT);
+      wlQuery.setText(BaseMessages.getString(PKG,
+            "SequoiaDBInput.Query.Label"));
+      props.setLook(wlQuery);
+      FormData fdlQuery = new FormData();
+      fdlQuery.left = new FormAttachment(0, 0);
+      fdlQuery.right = new FormAttachment(middle, -margin);
+      fdlQuery.top = new FormAttachment(0, margin);
+      wlQuery.setLayoutData(fdlQuery);
+      lastControl = wlQuery ;
+      m_wQuery = new StyledTextComp(transMeta, wQueryComp, SWT.MULTI | SWT.LEFT
+            | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL, "");
+      props.setLook(m_wQuery);
+      m_wQuery.addModifyListener(lsMod);
+      FormData fdQuery = new FormData();
+      fdQuery.left = new FormAttachment(0, 0);
+      fdQuery.top = new FormAttachment(lastControl, margin);
+      fdQuery.right = new FormAttachment(100, -2*margin);
+      fdQuery.bottom = new FormAttachment(50, -margin);
+      m_wQuery.setLayoutData(fdQuery);
+      lastControl = m_wQuery;
+      
+      // Field Selector
+      /*Label wlSelector = new Label(wQueryComp, SWT.RIGHT);
+      wlSelector.setText(BaseMessages.getString(PKG, "SequoiaDBInput.Selector.Label"));
+      props.setLook(wlSelector);
+      FormData fdlSelector = new FormData();
+      fdlSelector.left = new FormAttachment(0, 0);
+      fdlSelector.right = new FormAttachment(middle, -margin);
+      fdlSelector.top = new FormAttachment(lastControl, margin);
+      wlSelector.setLayoutData(fdlSelector);
+      m_wSelector = new TextVar(transMeta, wQueryComp, SWT.SINGLE | SWT.LEFT
+            | SWT.BORDER);
+      props.setLook(m_wSelector);
+      m_wSelector.addModifyListener(lsMod);
+      FormData fdSelector = new FormData();
+      fdSelector.left = new FormAttachment(middle, 0);
+      fdSelector.top = new FormAttachment(lastControl, margin);
+      fdSelector.right = new FormAttachment(100, 0);
+      m_wSelector.setLayoutData(fdSelector);
+      lastControl = m_wSelector;
+      wQueryComp.setLayoutData(fdSelector);*/
+      
+      // Order By
+      Label wlOrderby = new Label(wQueryComp, SWT.RIGHT);
+      wlOrderby.setText(BaseMessages.getString(PKG, "SequoiaDBInput.Orderby.Label"));
+      props.setLook(wlOrderby);
+      FormData fdlOrderby = new FormData();
+      fdlOrderby.left = new FormAttachment(0, 0);
+      fdlOrderby.right = new FormAttachment(middle, -margin);
+      fdlOrderby.top = new FormAttachment(lastControl, margin);
+      wlOrderby.setLayoutData(fdlOrderby);
+      m_wOrderby = new TextVar(transMeta, wQueryComp, SWT.SINGLE | SWT.LEFT
+            | SWT.BORDER);
+      props.setLook(m_wOrderby);
+      m_wOrderby.addModifyListener(lsMod);
+      FormData fdOrderby = new FormData();
+      fdOrderby.left = new FormAttachment(middle, 0);
+      fdOrderby.top = new FormAttachment(lastControl, margin);
+      fdOrderby.right = new FormAttachment(100, 0);
+      m_wOrderby.setLayoutData(fdOrderby);
+      lastControl = m_wOrderby;
+      wQueryComp.setLayoutData(fdOrderby);
+      
+      // Skip
+      Label wlSkip = new Label(wQueryComp, SWT.RIGHT);
+      wlSkip.setText(BaseMessages.getString(PKG, "SequoiaDBInput.Skip.Label"));
+      props.setLook(wlSkip);
+      FormData fdlSkip = new FormData();
+      fdlSkip.left = new FormAttachment(0, 0);
+      fdlSkip.right = new FormAttachment(middle, -margin);
+      fdlSkip.top = new FormAttachment(lastControl, margin);
+      wlSkip.setLayoutData(fdlSkip);
+      m_wSkip = new TextVar(transMeta, wQueryComp, SWT.SINGLE | SWT.LEFT
+            | SWT.BORDER);
+      props.setLook(m_wSkip);
+      m_wSkip.addModifyListener(lsMod);
+      FormData fdSkip = new FormData();
+      fdSkip.left = new FormAttachment(middle, 0);
+      fdSkip.top = new FormAttachment(lastControl, margin);
+      fdSkip.right = new FormAttachment(100, 0);
+      m_wSkip.setLayoutData(fdSkip);
+      lastControl = m_wSkip;
+      wQueryComp.setLayoutData(fdSkip);
+      
+      // Limit
+      Label wlLimit = new Label(wQueryComp, SWT.RIGHT);
+      wlLimit.setText(BaseMessages.getString(PKG, "SequoiaDBInput.Limit.Label"));
+      props.setLook(wlLimit);
+      FormData fdlLimit = new FormData();
+      fdlLimit.left = new FormAttachment(0, 0);
+      fdlLimit.right = new FormAttachment(middle, -margin);
+      fdlLimit.top = new FormAttachment(lastControl, margin);
+      wlLimit.setLayoutData(fdlLimit);
+      m_wLimit = new TextVar(transMeta, wQueryComp, SWT.SINGLE | SWT.LEFT
+            | SWT.BORDER);
+      props.setLook(m_wLimit);
+      m_wLimit.addModifyListener(lsMod);
+      FormData fdLimit = new FormData();
+      fdLimit.left = new FormAttachment(middle, 0);
+      fdLimit.top = new FormAttachment(lastControl, margin);
+      fdLimit.right = new FormAttachment(100, 0);
+      m_wLimit.setLayoutData(fdLimit);
+      lastControl = m_wLimit;
+      wQueryComp.setLayoutData(fdLimit);
+      
+      wQueryComp.layout();
+      m_wSdbQueryTab.setControl(wQueryComp);
+      
       // *************Fields tab***********
       m_wSdbFieldsTab = new CTabItem(m_wTabFolder, SWT.NONE);
       m_wSdbFieldsTab.setText(BaseMessages.getString(PKG,
@@ -371,8 +542,15 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
    private void populateDialog() {
       m_wHostname.setText(Const.NVL(m_meta.getHostname(), ""));
       m_wPort.setText(Const.NVL(m_meta.getPort(), ""));
+      m_wUsername.setText(Const.NVL(m_meta.getUserName(), ""));
+      m_wPassword.setText(Const.NVL(m_meta.getPwd(), ""));
       m_wCSName.setText(Const.NVL(m_meta.getCSName(), ""));
       m_wCLName.setText(Const.NVL(m_meta.getCLName(), ""));
+      m_wQuery.setText(Const.NVL(m_meta.getQuery(), ""));
+      //m_wSelector.setText(Const.NVL(m_meta.getSelector(), ""));
+      m_wOrderby.setText(Const.NVL(m_meta.getOrderby(), ""));
+      m_wSkip.setText(Const.NVL(m_meta.getSkipStr(), ""));
+      m_wLimit.setText(Const.NVL(m_meta.getLimitStr(), ""));
       wStepname.selectAll();
       setSelectedFields(m_meta.getSelectedFields());
    }
@@ -409,8 +587,15 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
    {
       m_meta.setHostname(m_wHostname.getText());
       m_meta.setPort(m_wPort.getText());
+      m_meta.setUserName(m_wUsername.getText());
+      m_meta.setPwd(m_wPassword.getText());
       m_meta.setCSName(m_wCSName.getText());
       m_meta.setCLName(m_wCLName.getText());
+      m_meta.setQuery(m_wQuery.getText());
+      //m_meta.setSelector(m_wSelector.getText());
+      m_meta.setOrderby(m_wOrderby.getText());
+      m_meta.setSkip(m_wSkip.getText());
+      m_meta.setLimit(m_wLimit.getText());
       
       int numFields = m_fieldsView.nrNonEmpty();
       if (numFields > 0){

@@ -25,6 +25,7 @@ import java.util.Iterator;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.bson.types.BasicBSONList;
+import org.bson.util.JSON;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMeta;
@@ -59,11 +60,12 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
 	   if(super.init(stepMetaInterface, stepDataInterface)){
 	      m_meta = (SequoiaDBInputMeta)stepMetaInterface;
 	      m_data = (SequoiaDBInputData)stepDataInterface;
+	      BSONObject emptyObj = new BasicBSONObject();
 	      
 	      String connString = environmentSubstitute(m_meta.getHostname())
 	            + ":" + environmentSubstitute(m_meta.getPort());
 	      Sequoiadb sdb = null;
-	      sdb = new Sequoiadb(connString, "", "");
+	      sdb = new Sequoiadb(connString, m_meta.getUserName(), m_meta.getPwd());
 	      if(!sdb.isCollectionSpaceExist(m_meta.getCSName())){
 	         return false;
 	      }
@@ -73,22 +75,58 @@ public class SequoiaDBInput extends BaseStep implements StepInterface {
 	      }
 	      DBCollection cl = cs.getCollection(m_meta.getCLName());
 	      
+	      //query
+	      BSONObject queryObj = (BasicBSONObject) JSON.parse(m_meta.getQuery()) ;
+	      if( null == queryObj ) {
+	         queryObj = emptyObj;
+	      }
+	      
+	      //orderby
+	      BSONObject orderbyObj = (BasicBSONObject) JSON.parse(m_meta.getOrderby()) ;
+         if( null == orderbyObj ) {
+            orderbyObj = emptyObj;
+         }
+	      
 	      List<SequoiaDBInputField> selectedFields = m_meta.getSelectedFields();
 	      if ( null != selectedFields && selectedFields.size() != 0 ){
-	         BSONObject fieldsObj = new BasicBSONObject();
+            List<BSONObject> aggrObjs = new ArrayList<BSONObject>();
+            
+            //match
+            BSONObject matchObj = new BasicBSONObject();
+            matchObj.put("$match", queryObj);
+            aggrObjs.add(matchObj);
+            
+            //sort
+            BSONObject sortObj = new BasicBSONObject();
+            sortObj.put("$sort", orderbyObj);
+            aggrObjs.add(sortObj);
+            
+            //skip
+            BSONObject skipObj = new BasicBSONObject();
+            skipObj.put("$skip", m_meta.getSkip());
+            aggrObjs.add(skipObj);
+            
+            //limit
+            BSONObject limitObj = new BasicBSONObject();
+            limitObj.put("$limit", m_meta.getLimit());
+            aggrObjs.add(limitObj);
+
+            //selector
+            BSONObject fieldsObj = new BasicBSONObject();
 	         for ( SequoiaDBInputField f : selectedFields ){
 	            String pathTmp = "$" + f.m_path;
 	            fieldsObj.put(f.m_fieldName, pathTmp);
 	         }
 	         BSONObject projectObj = new BasicBSONObject();
 	         projectObj.put("$project", fieldsObj);
-	         List<BSONObject> aggrObjs = new ArrayList<BSONObject>();
 	         aggrObjs.add(projectObj);
+
 	         m_cursor = cl.aggregate( aggrObjs );
 	      }
 	      else
 	      {
-	         m_cursor = cl.query();
+	         m_cursor = cl.query( queryObj, emptyObj, orderbyObj, emptyObj,
+	                              m_meta.getSkip(), m_meta.getLimit());
 	      }
 	      return true;
 	   }

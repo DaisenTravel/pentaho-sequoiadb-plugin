@@ -1,8 +1,10 @@
 package org.pentaho.di.trans.steps.sequoiadboutput;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.BSONTimestamp;
 import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.i18n.BaseMessages;
@@ -49,7 +51,11 @@ public class SequoiaDBOutputFieldInfo {
          return retObj ;
       }
       if ( vmi.isDate() ) {
-         retObj = vmi.getDate( input ) ;
+         if( input instanceof Timestamp ) {
+            retObj = new BSONTimestamp((int) (((Timestamp)input).getTime()/1000), 0);
+         }else {
+            retObj = vmi.getDate( input ) ;
+         }
          return retObj ;
       }
       if ( vmi.isNumber() ) {

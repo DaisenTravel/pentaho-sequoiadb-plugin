@@ -58,6 +58,11 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
    private static Class<?> PKG = SequoiaDBInputMeta.class;// for i18n purposes
 
    private List<SequoiaDBInputField> m_fields;
+   private String m_query = "";
+   private String m_selector = "";
+   private String m_orderby = "";
+   private int m_skip = 0;
+   private int m_limit = -1;
    
    public void init( RowMetaInterface outputRowMeta) throws KettlePluginException{
       if ( null != m_fields ) {
@@ -75,6 +80,11 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
    @Override
    public Object clone() {
       SequoiaDBInputMeta retval =(SequoiaDBInputMeta) super.clone();
+      retval.m_query = m_query;
+      retval.m_selector = m_selector;
+      retval.m_orderby = m_orderby;
+      retval.m_skip = m_skip;
+      retval.m_limit = m_limit;
       return retval;
    }
 
@@ -99,8 +109,15 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
    public void saveRep( Repository rep, IMetaStore metaStore, ObjectId id_transformation, ObjectId id_step ) throws KettleException{
       rep.saveStepAttribute( id_transformation, id_step, "hostname", getHostname() );
       rep.saveStepAttribute( id_transformation, id_step, "port", getPort() );
+      rep.saveStepAttribute( id_transformation, id_step, "sequoiadbusername", getUserName() );
+      rep.saveStepAttribute( id_transformation, id_step, "sequoiadbpassword", getPwd() );
       rep.saveStepAttribute( id_transformation, id_step, "CSName", getCSName() );
       rep.saveStepAttribute( id_transformation, id_step, "CLName", getCLName() );
+      rep.saveStepAttribute( id_transformation, id_step, "query", getQuery() );
+      rep.saveStepAttribute( id_transformation, id_step, "selector", getSelector() );
+      rep.saveStepAttribute( id_transformation, id_step, "orderby", getOrderby() );
+      rep.saveStepAttribute( id_transformation, id_step, "skip", getSkipStr() );
+      rep.saveStepAttribute( id_transformation, id_step, "limit", getLimitStr() );
       
       if (m_fields != null && m_fields.size() > 0){
          for (int i = 0; i < m_fields.size(); i++){
@@ -117,8 +134,15 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
      throws KettleException {
       setHostname( rep.getStepAttributeString( id_step, "hostname" ) );
       setPort( rep.getStepAttributeString( id_step, "port" ) );
+      setUserName( rep.getStepAttributeString( id_step, "sequoiadbusername" ) );
+      setPwd( rep.getStepAttributeString( id_step, "sequoiadbpassword" ) );
       setCSName( rep.getStepAttributeString( id_step, "CSName" ) );
       setCLName( rep.getStepAttributeString( id_step, "CLName" ) );
+      setQuery( rep.getStepAttributeString( id_step, "query" ) );
+      setSelector( rep.getStepAttributeString( id_step, "selector" ) );
+      setOrderby( rep.getStepAttributeString( id_step, "orderby" ) );
+      setSkip( rep.getStepAttributeString( id_step, "skip" ) );
+      setLimit( rep.getStepAttributeString( id_step, "limit" ) );
 
       int numFields = rep.countNrStepAttributes(id_step, "field_name");
       if(numFields > 0){
@@ -146,6 +170,16 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
         retval.append( "    " ).append( XMLHandler.addTagValue( "port", getPort() ) );
      }
 
+     if ( null != getUserName() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "sequoiadbusername", getUserName() ) );
+     }
+
+     if ( null != getPwd() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "sequoiadbpassword", getPwd() ) );
+     }
+
      if ( null != getCSName() )
      {
         retval.append( "    " ).append( XMLHandler.addTagValue( "CSName", getCSName() ) );
@@ -154,6 +188,31 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
      if ( null != getCLName() )
      {
         retval.append( "    " ).append( XMLHandler.addTagValue( "CLName", getCLName() ) );
+     }
+
+     if ( null != getQuery() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "query", getQuery() ) );
+     }
+
+     if ( null != getSelector() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "selector", getSelector() ) );
+     }
+
+     if ( null != getOrderby() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "orderby", getOrderby() ) );
+     }
+
+     if ( null != getSkipStr() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "skip", getSkipStr() ) );
+     }
+
+     if ( null != getLimitStr() )
+     {
+        retval.append( "    " ).append( XMLHandler.addTagValue( "limit", getLimitStr() ) );
      }
 
      if ( m_fields != null && m_fields.size() > 0 ){
@@ -186,6 +245,16 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
      {
         setPort( strTmp );
      }
+     strTmp = XMLHandler.getTagValue( stepnode, "sequoiadbusername" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setUserName( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "sequoiadbpassword" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setPwd( strTmp );
+     }
      strTmp = XMLHandler.getTagValue( stepnode, "CSName" );
      if ( strTmp != null && !strTmp.isEmpty())
      {
@@ -195,6 +264,31 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
      if ( strTmp != null && !strTmp.isEmpty())
      {
         setCLName( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "query" );
+     if ( strTmp != null && !strTmp.isEmpty())
+     {
+        setQuery( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "selector" );
+     if ( strTmp != null && !strTmp.isEmpty())
+     {
+        setSelector( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "orderby" );
+     if ( strTmp != null && !strTmp.isEmpty())
+     {
+        setOrderby( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "skip" );
+     if ( strTmp != null && !strTmp.isEmpty())
+     {
+        setSkip( strTmp );
+     }
+     strTmp = XMLHandler.getTagValue( stepnode, "limit" );
+     if ( strTmp != null && !strTmp.isEmpty())
+     {
+        setLimit( strTmp );
      }
      
      Node selectedFields = XMLHandler.getSubNode( stepnode, "selected_fields");
@@ -240,5 +334,75 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
 
    public List<SequoiaDBInputField> getSelectedFields(){
       return m_fields;
+   }
+   
+   public String getQuery() {
+      return m_query;
+   }
+   
+   public void setQuery(String query) {
+      this.m_query = query;
+   }
+   
+   public String getSelector() {
+      return m_selector;
+   }
+   
+   public void setSelector(String selector) {
+      this.m_selector = selector;
+   }
+   
+   public String getOrderby() {
+      return m_orderby;
+   }
+   
+   public void setOrderby(String orderby) {
+      this.m_orderby = orderby;
+   }
+   
+   public String getSkipStr() {
+      return Integer.toString(m_skip);
+   }
+   
+   public int getSkip() {
+      return m_skip;
+   }
+   
+   public void setSkip(String skip) {
+      try{
+         Integer tmp = Integer.valueOf(skip);
+         if (tmp != null){
+            m_skip = tmp.intValue() ;
+         }
+      }
+      catch(NumberFormatException e){
+         // Do nothing. Use the old value if input error.
+      }
+      if ( m_skip < 0 ){
+         m_skip = 0 ;
+      }
+   }
+   
+   public String getLimitStr() {
+      return Integer.toString(m_limit);
+   }
+   
+   public int getLimit() {
+      return m_limit;
+   }
+   
+   public void setLimit(String limit) {
+      try{
+         Integer tmp = Integer.valueOf(limit);
+         if (tmp != null){
+            m_limit = tmp.intValue() ;
+         }
+      }
+      catch(NumberFormatException e){
+         // Do nothing. Use the old value if input error.
+      }
+      if ( m_limit < 0 ){
+         m_limit = -1 ;
+      }
    }
 }

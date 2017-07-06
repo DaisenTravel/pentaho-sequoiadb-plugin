@@ -16,8 +16,10 @@
 package org.pentaho.di.trans.steps.sequoiadbinput;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.Date;
 
+import org.bson.types.BSONTimestamp;
 import org.bson.types.Binary;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettlePluginException;
@@ -132,6 +134,9 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
             else if( input instanceof Number ){
                valTmp = new Date(((Number)input).longValue());
             }
+            else if( input instanceof BSONTimestamp ) {
+               valTmp = ((BSONTimestamp)input).getDate();
+            }
             else if ( input instanceof Date ){
                valTmp = input;
             }
@@ -140,6 +145,27 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
                      input.toString() ));
             }
             result = m_tmpValueMeta.getDate( valTmp );
+            break;
+         case ValueMetaInterface.TYPE_TIMESTAMP:
+            if ( null == input ){
+               valTmp = getDefaultValue( type );
+            }
+            else if( input instanceof Number ){
+               valTmp = new Timestamp(((Number)input).longValue());
+            }
+            else if( input instanceof Date ) {
+               valTmp = new Timestamp(((Date)input).getTime());
+            }
+            else if ( input instanceof BSONTimestamp ){
+               long tmp = ((BSONTimestamp)input).getTime();
+               valTmp = new Timestamp(tmp*1000);
+            }
+            else{
+               throw new KettleException( BaseMessages.getString( PKG, "SequoiaDB.ErrorMessage.DateConversion",
+                     input.toString() ));
+            }
+            result = m_tmpValueMeta.getDate( valTmp );
+            break;
          default:
       }
       return result;
@@ -170,6 +196,10 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
             break;
          case ValueMetaInterface.TYPE_DATE:
             result = new Date();
+            break;
+         case ValueMetaInterface.TYPE_TIMESTAMP:
+            result = new Timestamp(0);
+            break;
          default:
       }
       return result;
