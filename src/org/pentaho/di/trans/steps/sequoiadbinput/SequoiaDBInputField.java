@@ -157,8 +157,9 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
                valTmp = new Timestamp(((Date)input).getTime());
             }
             else if ( input instanceof BSONTimestamp ){
-               long tmp = ((BSONTimestamp)input).getTime();
-               valTmp = new Timestamp(tmp*1000);
+               long tmp = (long)(((BSONTimestamp)input).getTime()) * 1000
+                           + ((BSONTimestamp)input).getInc() / 1000 ;
+               valTmp = new Timestamp(tmp);
             }
             else{
                throw new KettleException( BaseMessages.getString( PKG, "SequoiaDB.ErrorMessage.DateConversion",
