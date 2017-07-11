@@ -53,7 +53,7 @@ public class SequoiaDBOutputFieldInfo {
       if ( vmi.isDate() ) {
          if( input instanceof Timestamp ) {
             retObj = new BSONTimestamp((int) (((Timestamp)input).getTime()/1000),
-                                       (int)(((Timestamp)input).getTime()%1000*1000));
+                                       ((Timestamp)input).getNanos()/1000);
          }else {
             retObj = vmi.getDate( input ) ;
          }

@@ -135,7 +135,8 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
                valTmp = new Date(((Number)input).longValue());
             }
             else if( input instanceof BSONTimestamp ) {
-               valTmp = ((BSONTimestamp)input).getDate();
+               valTmp = new Date((long)(((BSONTimestamp)input).getTime())*1000
+                                          + ((BSONTimestamp)input).getInc()/1000);
             }
             else if ( input instanceof Date ){
                valTmp = input;
@@ -157,9 +158,8 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
                valTmp = new Timestamp(((Date)input).getTime());
             }
             else if ( input instanceof BSONTimestamp ){
-               long tmp = (long)(((BSONTimestamp)input).getTime()) * 1000
-                           + ((BSONTimestamp)input).getInc() / 1000 ;
-               valTmp = new Timestamp(tmp);
+               valTmp = new Timestamp( (long)(((BSONTimestamp)input).getTime()) * 1000 );
+               ((Timestamp)valTmp).setNanos( ((BSONTimestamp)input).getInc() * 1000 );
             }
             else{
                throw new KettleException( BaseMessages.getString( PKG, "SequoiaDB.ErrorMessage.DateConversion",
