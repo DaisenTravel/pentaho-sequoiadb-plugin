@@ -24,7 +24,6 @@ import org.bson.types.BSONTimestamp;
 import org.bson.types.Binary;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettlePluginException;
-import org.pentaho.di.core.row.ValueMeta;
 import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.core.row.value.ValueMetaFactory;
 import org.pentaho.di.i18n.BaseMessages;
@@ -41,7 +40,7 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
    private ValueMetaInterface m_tmpValueMeta;
    
    public void init( int index ) throws KettlePluginException{
-      m_tmpValueMeta = ValueMetaFactory.createValueMeta( ValueMeta.getType( m_kettleType ) );
+      m_tmpValueMeta = ValueMetaFactory.createValueMeta( ValueMetaFactory.getIdForValueMeta( m_kettleType ) );
       m_outputIndex = index;
    }
 

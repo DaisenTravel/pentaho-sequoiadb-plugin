@@ -26,8 +26,8 @@ import org.pentaho.di.core.exception.KettlePluginException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.exception.KettleXMLException;
 import org.pentaho.di.core.row.RowMetaInterface;
-import org.pentaho.di.core.row.ValueMeta;
 import org.pentaho.di.core.row.ValueMetaInterface;
+import org.pentaho.di.core.row.value.ValueMetaFactory;
 import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.core.xml.XMLHandler;
 import org.pentaho.di.repository.ObjectId;
@@ -311,21 +311,24 @@ public class SequoiaDBInputMeta extends SequoiaDBMeta {
    @Override
    public void getFields( RowMetaInterface rowMeta, String origin, RowMetaInterface[] info, StepMeta nextStep,
          VariableSpace space ) throws KettleStepException {
-      if ( m_fields == null || m_fields.size() == 0 ){
-         // TODO: get the name "json" from dialog
-         ValueMetaInterface jsonValueMeta = new ValueMeta( "JSON", ValueMetaInterface.TYPE_STRING);
-         jsonValueMeta.setOrigin( origin );
-         rowMeta.addValueMeta( jsonValueMeta );
-      }else{
-         // get the selected fields
-         for ( SequoiaDBInputField f : m_fields ){
-            ValueMetaInterface vm = new ValueMeta();
-            vm.setName( f.m_fieldName );
-            vm.setOrigin( origin );
-            vm.setType( ValueMeta.getType( f.m_kettleType ));
-            rowMeta.addValueMeta( vm );
-         }
-      }
+      try {
+				if ( m_fields == null || m_fields.size() == 0 ){
+				   // TODO: get the name "json" from dialog
+					
+				   ValueMetaInterface jsonValueMeta = ValueMetaFactory.createValueMeta("JSON", ValueMetaInterface.TYPE_STRING);
+				   jsonValueMeta.setOrigin( origin );
+				   rowMeta.addValueMeta( jsonValueMeta );
+				}else{
+				   // get the selected fields
+				   for ( SequoiaDBInputField f : m_fields ){
+				      ValueMetaInterface vm = ValueMetaFactory.createValueMeta(f.m_fieldName, ValueMetaFactory.getIdForValueMeta( f.m_kettleType ));
+				      vm.setOrigin( origin );
+				      rowMeta.addValueMeta( vm );
+				   }
+				}
+			} catch (KettlePluginException e) {
+				throw new KettleStepException(e);
+			}
    }
    
    public void setSelectedFields(List<SequoiaDBInputField> fields){
