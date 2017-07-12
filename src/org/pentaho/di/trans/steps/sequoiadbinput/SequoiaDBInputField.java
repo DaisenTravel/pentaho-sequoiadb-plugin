@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import org.bson.types.BSONDecimal;
 import org.bson.types.BSONTimestamp;
 import org.bson.types.Binary;
 import org.pentaho.di.core.exception.KettleException;
@@ -167,7 +168,30 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
             }
             result = m_tmpValueMeta.getDate( valTmp );
             break;
+         case ValueMetaInterface.TYPE_BIGNUMBER:
+            if ( null == input ){
+               valTmp = getDefaultValue( type );
+            }
+            else if( input instanceof Number) {
+               if( input instanceof Double || input instanceof Float ) {
+                  valTmp = new BigDecimal(((Number)input).doubleValue());
+               }
+               else {
+                  valTmp = new BigDecimal(((Number)input).longValue());
+               }
+            }
+            else if( input instanceof BSONDecimal) {
+               valTmp = ((BSONDecimal)input).toBigDecimal() ;
+            }
+            else{
+               throw new KettleException( BaseMessages.getString( PKG, "SequoiaDB.ErrorMessage.DateConversion",
+                     input.toString() ));
+            }
+            result = m_tmpValueMeta.getBigNumber( valTmp );
+            break;
          default:
+            throw new KettleException( BaseMessages.getString( PKG, "SequoiaDB.ErrorMessage.DateConversion",
+                  input.toString() ));
       }
       return result;
    }
