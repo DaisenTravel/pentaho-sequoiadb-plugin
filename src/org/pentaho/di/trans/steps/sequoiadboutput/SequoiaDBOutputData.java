@@ -15,16 +15,12 @@
  */
 package org.pentaho.di.trans.steps.sequoiadboutput;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.RowMetaInterface;
-import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
@@ -39,10 +35,18 @@ public class SequoiaDBOutputData extends BaseStepData implements StepDataInterfa
       m_outputRowMeta = outMeta;
     }
    
-   public BSONObject kettleToBson( Object[] row, SequoiaDBOutputRecordInfo recordInfo ) throws KettleValueException{
-      return recordInfo.toBson( row, m_outputRowMeta ) ;
+   public BSONObject getInserter( Object[] row, SequoiaDBOutputRecordInfo recordInfo ) throws KettleValueException{
+      return recordInfo.getInserter( row, m_outputRowMeta ) ;
    }
    
+   public BSONObject getUpdater( Object[] row, SequoiaDBOutputRecordInfo recordInfo ) throws KettleValueException{
+      return recordInfo.getUpdater( row, m_outputRowMeta ) ;
+   }
+   
+   public BSONObject getUpdateCond( Object[] row, SequoiaDBOutputRecordInfo recordInfo ) throws KettleValueException{
+      return recordInfo.getUpdateCond( row, m_outputRowMeta ) ;
+   }
+
    public BSONObject makeBSONObject( Iterator<String> it, String key,
 		                             Object o, Object value ) throws KettleValueException {
 	   

@@ -16,7 +16,6 @@
 package org.pentaho.di.trans.steps.sequoiadboutput;
 
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.swt.widgets.Shell;
 import org.pentaho.di.core.annotations.Step;
@@ -58,6 +57,12 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
    private static int BULK_INSERT_SIZE_DFT = 1000;
 
    private int m_bulkInsertSize = BULK_INSERT_SIZE_DFT;
+   
+   private boolean m_truncate = false;
+   
+   private boolean m_update = false;
+   
+   private boolean m_upsert = false;
 
    public StepDialogInterface getDialog(Shell shell, StepMetaInterface meta, TransMeta transMeta, String name) {
       return new SequoiaDBOutputDialog(shell, meta, transMeta, name);
@@ -68,6 +73,9 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
       SequoiaDBOutputMeta retval =(SequoiaDBOutputMeta) super.clone();
       retval.m_fields = m_fields;
       retval.m_bulkInsertSize = m_bulkInsertSize;
+      retval.m_truncate = m_truncate ;
+      retval.m_update = m_update ;
+      retval.m_upsert = m_upsert ;
       return retval;
    }
 
@@ -97,20 +105,24 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
       rep.saveStepAttribute( id_transformation, id_step, "CSName", getCSName() );
       rep.saveStepAttribute( id_transformation, id_step, "CLName", getCLName() );
       rep.saveStepAttribute( id_transformation, id_step, "bulkinsertsize", getBulkInsertSizeStr() );
+      rep.saveStepAttribute( id_transformation, id_step, "truncate", getTruncate() );
+      rep.saveStepAttribute( id_transformation, id_step, "update", getUpdate() );
+      rep.saveStepAttribute( id_transformation, id_step, "upsert", getUpsert() );
       
-      Map<String, SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
-      if ( fieldsInfo != null && fieldsInfo.size() > 0 ){
-         int i = 0 ;
-         for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fieldsInfo.entrySet() ){
-            List<String> fieldPathList = entry.getValue().getFieldPath() ;
-            int fieldPathNum = fieldPathList.size() ;
-            for( int j = 0 ; j < fieldPathNum ; j++ ){
-               rep.saveStepAttribute( id_transformation, id_step, i, "field_name",
-                                      entry.getKey() );
-               rep.saveStepAttribute( id_transformation, id_step, i, "field_path",
-                                      fieldPathList.get(j) );
-               ++i ;
-            }
+      List<SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
+      if ( fieldsInfo != null ){
+         int fieldNum = fieldsInfo.size() ;
+         SequoiaDBOutputFieldInfo tmpFieldInfo ;
+         for( int i = 0 ; i < fieldNum ; i++ ) {
+            tmpFieldInfo = fieldsInfo.get(i) ;
+            rep.saveStepAttribute( id_transformation, id_step, i, "field_name",
+                                   tmpFieldInfo.getName());
+            rep.saveStepAttribute( id_transformation, id_step, i, "field_path",
+                                   tmpFieldInfo.getPath());
+            rep.saveStepAttribute( id_transformation, id_step, i, "field_cond",
+                                   tmpFieldInfo.getCond());
+            rep.saveStepAttribute( id_transformation, id_step, i, "field_updateop",
+                                   tmpFieldInfo.getUpdateOp());
          }
       }
    }
@@ -125,13 +137,20 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
       setCSName( rep.getStepAttributeString( id_step, "CSName" ) );
       setCLName( rep.getStepAttributeString( id_step, "CLName" ) );
       setBulkInsertSize( rep.getStepAttributeString( id_step, "bulkinsertsize" ) );
+      setTruncate( rep.getStepAttributeBoolean( id_step, "truncate" ) );
+      setUpdate( rep.getStepAttributeBoolean( id_step, "update" ) );
+      setUpsert( rep.getStepAttributeBoolean( id_step, "upsert" ) );
 
       int numFields = rep.countNrStepAttributes(id_step, "field_name");
       if(numFields > 0){
          m_fields = new SequoiaDBOutputRecordInfo();
          for( int i = 0; i < numFields; i++){
-            m_fields.addField( rep.getStepAttributeString(id_step, i, "field_name"),
-                  rep.getStepAttributeString(id_step, i, "field_path") );
+            SequoiaDBOutputFieldInfo fieldInfo
+                     = new SequoiaDBOutputFieldInfo(rep.getStepAttributeString(id_step, i, "field_name"),
+                                                    rep.getStepAttributeString(id_step, i, "field_path")) ;
+            fieldInfo.setCond( rep.getStepAttributeBoolean(id_step, i, "field_cond") ) ;
+            fieldInfo.setUpdateOp( rep.getStepAttributeString(id_step, i, "field_updateop") ) ;
+            m_fields.addField( fieldInfo );
          }
          m_fields.done() ;
       }
@@ -171,21 +190,31 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      }
 
      retval.append( "    " ).append( XMLHandler.addTagValue( "bulkinsertsize", getBulkInsertSizeStr() ) );
+     
+     retval.append( "    " ).append( XMLHandler.addTagValue( "truncate", getTruncate() ) );
+     
+     retval.append( "    " ).append( XMLHandler.addTagValue( "update", getUpdate() ) );
+     
+     retval.append( "    " ).append( XMLHandler.addTagValue( "upsert", getUpsert() ) );
 
-     Map<String, SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
-     if ( fieldsInfo != null && fieldsInfo.size() > 0 ){
+     List<SequoiaDBOutputFieldInfo> fieldsInfo = m_fields.getFieldsInfo() ;
+     if ( fieldsInfo != null ){
         retval.append( "    ").append( XMLHandler.openTag( "selected_fields" ));
-        for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fieldsInfo.entrySet() ){
-           List<String> fieldPathList = entry.getValue().getFieldPath() ;
-           int fieldPathNum = fieldPathList.size() ;
-           for( int j = 0 ; j < fieldPathNum ; j++ ){
-              retval.append("      ").append(XMLHandler.openTag( "selected_field" ));
-              retval.append("        ").append(
-                    XMLHandler.addTagValue( "field_name", entry.getKey()));
-              retval.append("        ").append(
-                    XMLHandler.addTagValue( "field_path", fieldPathList.get(j)));
-              retval.append("      ").append(XMLHandler.closeTag( "selected_field" ));
-           }
+        
+        int fieldNum = fieldsInfo.size() ;
+        SequoiaDBOutputFieldInfo tmpFieldInfo ;
+        for( int i = 0 ; i < fieldNum ; i++ ) {
+           tmpFieldInfo = fieldsInfo.get(i) ;
+           retval.append("      ").append(XMLHandler.openTag( "selected_field" ));
+           retval.append("        ").append(
+                 XMLHandler.addTagValue( "field_name", tmpFieldInfo.getName()));
+           retval.append("        ").append(
+                 XMLHandler.addTagValue( "field_path", tmpFieldInfo.getPath()));
+           retval.append("        ").append(
+                 XMLHandler.addTagValue( "field_cond", tmpFieldInfo.getCond()));
+           retval.append("        ").append(
+                 XMLHandler.addTagValue( "field_updateop", tmpFieldInfo.getUpdateOp()));
+           retval.append("      ").append(XMLHandler.closeTag( "selected_field" ));
         }
         retval.append("    ").append(XMLHandler.closeTag( "selected_fields" ));
      }
@@ -231,6 +260,24 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
         setBulkInsertSize( strTmp );
      }
      
+     strTmp = XMLHandler.getTagValue( stepnode, "truncate" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setTruncate(strTmp.equalsIgnoreCase( "Y" ));
+     }
+     
+     strTmp = XMLHandler.getTagValue( stepnode, "update" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setUpdate(strTmp.equalsIgnoreCase( "Y" ));
+     }
+     
+     strTmp = XMLHandler.getTagValue( stepnode, "upsert" );
+     if ( null != strTmp && !strTmp.isEmpty())
+     {
+        setUpsert(strTmp.equalsIgnoreCase( "Y" ));
+     }
+
      Node selectedFields = XMLHandler.getSubNode( stepnode, "selected_fields");
      if ( selectedFields != null && XMLHandler.countNodes(selectedFields, "selected_field") > 0 ){
         int numFields = XMLHandler.countNodes(selectedFields, "selected_field");
@@ -238,8 +285,20 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
         for ( int i = 0; i < numFields; i++ ){
            Node fieldNode = XMLHandler.getSubNodeByNr( selectedFields, "selected_field", i);
            try {
-              m_fields.addField( XMLHandler.getTagValue( fieldNode, "field_name"),
-                                 XMLHandler.getTagValue( fieldNode, "field_path") );
+              SequoiaDBOutputFieldInfo tmpFieldInfo
+                       = new SequoiaDBOutputFieldInfo(XMLHandler.getTagValue( fieldNode, "field_name"),
+                                                      XMLHandler.getTagValue( fieldNode, "field_path") );
+              strTmp = XMLHandler.getTagValue( fieldNode, "field_cond" );
+              if ( null != strTmp && !strTmp.isEmpty())
+              {
+                 tmpFieldInfo.setCond(strTmp.equalsIgnoreCase( "Y" ));
+              }
+              strTmp = XMLHandler.getTagValue( fieldNode, "field_updateop" );
+              if ( null != strTmp && !strTmp.isEmpty())
+              {
+                 tmpFieldInfo.setUpdateOp(strTmp);
+              }
+              m_fields.addField( tmpFieldInfo );
            } catch (KettleValueException e) {
               e.printStackTrace();
               throw new KettleXMLException( BaseMessages.getString( PKG,
@@ -256,18 +315,22 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
      }
    }
    
-   public void addSelectedField( String srcFieldName, String fieldPath ) throws KettleValueException{
+   public void addSelectedField( String srcFieldName, String fieldPath,
+                                 String isCond, String updateOp) throws KettleValueException{
       if ( null == m_fields ){
          m_fields = new SequoiaDBOutputRecordInfo();
       }
-      m_fields.addField( srcFieldName, fieldPath );
+      SequoiaDBOutputFieldInfo tmpField = new SequoiaDBOutputFieldInfo( srcFieldName, fieldPath );
+      tmpField.setCond( isCond.equalsIgnoreCase( "Y" ));
+      tmpField.setUpdateOp( updateOp );
+      m_fields.addField( tmpField );
    }
    
    public void done() throws KettleValueException{
       m_fields.done() ;
    }
    
-   public Map<String, SequoiaDBOutputFieldInfo> getSelectedFields(){
+   public List<SequoiaDBOutputFieldInfo> getSelectedFields(){
       if ( null == m_fields ){
          return null ;
       }
@@ -303,5 +366,29 @@ public class SequoiaDBOutputMeta extends SequoiaDBMeta {
    
    public String getBulkInsertSizeStr(){
       return Integer.toString( m_bulkInsertSize ) ;
+   }
+   
+   public void setTruncate(boolean truncate) {
+      m_truncate = truncate;
+   }
+   
+   public boolean getTruncate() {
+      return m_truncate;
+   }
+   
+   public void setUpdate(boolean update) {
+      m_update = update;
+   }
+   
+   public boolean getUpdate() {
+      return m_update;
+   }
+   
+   public void setUpsert(boolean upsert) {
+      m_upsert = upsert;
+   }
+   
+   public boolean getUpsert() {
+      return m_upsert;
    }
 }

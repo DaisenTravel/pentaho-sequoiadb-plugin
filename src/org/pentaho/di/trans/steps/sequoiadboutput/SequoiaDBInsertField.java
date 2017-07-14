@@ -24,7 +24,7 @@ import org.bson.types.BasicBSONList;
 import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.i18n.BaseMessages;
 
-public class SequoiaDBOutputField{
+public class SequoiaDBInsertField{
 
    private static Class<?> PKG = SequoiaDBOutputMeta.class;
 
@@ -32,18 +32,11 @@ public class SequoiaDBOutputField{
    
    private String m_srcFieldName = "" ;
    
-   private boolean m_isCond = false ;
-   
    //private List<SequoiaDBOutputField> m_children = null ;
    
-   private Map<String, SequoiaDBOutputField> m_children = null ;
+   private Map<String, SequoiaDBInsertField> m_children = null ;
    
    private boolean m_isArray = false ;
-   
-   private class SequoiaDBUpdateOp{
-      public static final int OP_SET = 1 ;   //$set
-      public static final int OP_INC = 2 ;   //$inc
-   }
       
    private void parseFieldPath( String fieldPath, String[] fieldPathInfo ){
       if( null == fieldPath || fieldPath.isEmpty() ){
@@ -90,10 +83,10 @@ public class SequoiaDBOutputField{
          return ;
       }
       
-      SequoiaDBOutputField childField = new SequoiaDBOutputField() ;
+      SequoiaDBInsertField childField = new SequoiaDBInsertField() ;
       childField.init( srcFieldName, fieldPathInfo[1] ) ;
       if ( null == m_children ){
-         m_children = new TreeMap<String, SequoiaDBOutputField>() ;
+         m_children = new TreeMap<String, SequoiaDBInsertField>() ;
       }
       m_children.put( childField.getFieldName(), childField ) ;
    }
@@ -133,7 +126,7 @@ public class SequoiaDBOutputField{
       }
       
       boolean isMerged = false ;
-      for( Map.Entry<String, SequoiaDBOutputField> entry : m_children.entrySet() ){
+      for( Map.Entry<String, SequoiaDBInsertField> entry : m_children.entrySet() ){
          if ( entry.getValue().isNeedMerge( fieldPathInfo[1] ) ){
             entry.getValue().addField( srcFieldName, fieldPathInfo[1] ) ;
             isMerged = true ;
@@ -141,16 +134,16 @@ public class SequoiaDBOutputField{
          }
       }
       if ( !isMerged ){
-         SequoiaDBOutputField newField = new SequoiaDBOutputField() ;
+         SequoiaDBInsertField newField = new SequoiaDBInsertField() ;
          newField.init( srcFieldName, fieldPathInfo[1] ) ;
          if ( null == m_children ){
-            m_children = new TreeMap<String, SequoiaDBOutputField>() ;
+            m_children = new TreeMap<String, SequoiaDBInsertField>() ;
          }
          m_children.put( newField.getFieldName(), newField ) ;
       }
    }
    
-   public Object toObj(  Map<String, SequoiaDBOutputFieldInfo> fieldsInfo ) throws KettleValueException{
+   public Object toObj(  Map<String, SequoiaDBInsertFieldInfo> fieldsInfo ) throws KettleValueException{
       if ( null == m_children || m_children.isEmpty() ){
          return fieldsInfo.get( m_srcFieldName ).getVal() ;
       }
@@ -159,14 +152,14 @@ public class SequoiaDBOutputField{
          if ( m_isArray ){
             childrenField = new BasicBSONList() ;
             Integer i = 0;
-            for( Map.Entry<String, SequoiaDBOutputField> entry : m_children.entrySet() ){
+            for( Map.Entry<String, SequoiaDBInsertField> entry : m_children.entrySet() ){
                childrenField.put( i.toString(), entry.getValue().toObj( fieldsInfo ) ) ;
                ++i ;
                }
          }
          else {
             childrenField = new BasicBSONObject() ;
-            for( Map.Entry<String, SequoiaDBOutputField> entry : m_children.entrySet() ){
+            for( Map.Entry<String, SequoiaDBInsertField> entry : m_children.entrySet() ){
                childrenField.put( entry.getKey(), entry.getValue().toObj( fieldsInfo ) ) ;
                }
          }
@@ -180,7 +173,7 @@ public class SequoiaDBOutputField{
          hasNotArrayField = true ;
       }
       else{
-         for( Map.Entry<String, SequoiaDBOutputField> entry : m_children.entrySet() ){
+         for( Map.Entry<String, SequoiaDBInsertField> entry : m_children.entrySet() ){
             entry.getValue().done();
             if ( !hasNotArrayField && -1 == entry.getValue().getArrayPos() ){
                hasNotArrayField = true ;

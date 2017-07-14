@@ -50,6 +50,7 @@ import org.pentaho.di.trans.step.StepDialogInterface;
 import org.pentaho.di.trans.steps.sequoiadbinput.SequoiaDBInputField;
 import org.pentaho.di.trans.steps.sequoiadbinput.SequoiaDBInputMeta;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
+import org.pentaho.di.ui.core.widget.PasswordTextVar;
 import org.pentaho.di.ui.core.widget.StyledTextComp;
 import org.pentaho.di.ui.core.widget.TableView;
 import org.pentaho.di.ui.core.widget.TextVar;
@@ -63,7 +64,6 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 	private CTabItem m_wSdbInputTab;
 	private CTabItem m_wSdbQueryTab;
 	private CTabItem m_wSdbFieldsTab;
-	private CTabItem m_wSdbOrderByTab;
 
 	private TextVar m_wHostname;
 	private TextVar m_wPort;
@@ -72,7 +72,6 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
 	private TextVar m_wCSName;
 	private TextVar m_wCLName;
 	private StyledTextComp m_wQuery;
-   private TextVar m_wSelector;
    private TextVar m_wOrderby;
    private TextVar m_wSkip;
    private TextVar m_wLimit;
@@ -236,7 +235,7 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
       fdlPassword.right = new FormAttachment(middle, -margin);
       fdlPassword.top = new FormAttachment(lastControl, margin);
       wlPassword.setLayoutData(fdlPassword);
-      m_wPassword = new TextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
+      m_wPassword = new PasswordTextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
             | SWT.BORDER);
       props.setLook(m_wPassword);
       m_wPassword.addModifyListener(lsMod);
@@ -605,6 +604,9 @@ public class SequoiaDBInputDialog extends BaseStepDialog implements StepDialogIn
             SequoiaDBInputField fieldTmp = new SequoiaDBInputField();
             fieldTmp.m_fieldName = item.getText(FIRST_COL).trim();
             fieldTmp.m_path = item.getText(SECOND_COL).trim();
+            if( null == fieldTmp.m_path || fieldTmp.m_path.isEmpty() ) {
+               fieldTmp.m_path = fieldTmp.m_fieldName ;
+            }
             fieldTmp.m_kettleType = item.getText(THIRD_COL).trim();
             selectedFields.add(fieldTmp);
          }

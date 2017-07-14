@@ -189,8 +189,7 @@ public class SequoiaDBInputField implements Comparable<SequoiaDBInputField> {
             result = m_tmpValueMeta.getBigNumber( valTmp );
             break;
          default:
-            throw new KettleException( BaseMessages.getString( PKG, "SequoiaDB.ErrorMessage.DateConversion",
-                  input.toString() ));
+            result = input;
       }
       return result;
    }

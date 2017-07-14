@@ -18,7 +18,6 @@ package org.pentaho.di.trans.steps.sequoiadboutput;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.bson.BSONObject;
@@ -48,7 +47,14 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
    private DBCollection m_cl ;
 
    protected int m_bulkInsertSize ;
+
    private List<BSONObject> m_buffer ;
+   
+   private boolean m_truncate = false ;
+   
+   private boolean m_update = false ;
+   
+   private boolean m_upsert = false ;
 
    public SequoiaDBOutput(StepMeta stepMeta,
          StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta,
@@ -82,6 +88,10 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
          }
          
          m_bulkInsertSize = m_meta.getBulkInsertSize();
+         m_truncate = m_meta.getTruncate();
+         m_update = m_meta.getUpdate();
+         m_upsert = m_meta.getUpsert();
+
          return true;
       }
       return false;
@@ -113,6 +123,10 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
       // in the row structure that only need to be done once
       if (first) {
          first = false;
+         
+         if(m_truncate) {
+            m_cl.truncate();
+         }
 
          // clone the input row structure and place it in our data object
          m_buffer = new ArrayList< BSONObject >( m_bulkInsertSize ) ;
@@ -122,7 +136,7 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
          m_data.setOutputRowMeta( rmi ) ;
 
          // check if match the input fields
-         Map<String, SequoiaDBOutputFieldInfo> selectedFields = m_meta.getSelectedFields();
+         List<SequoiaDBOutputFieldInfo> selectedFields = m_meta.getSelectedFields();
          if ( null != selectedFields ) {
             checkFields( rmi, selectedFields ) ;
          }
@@ -132,17 +146,28 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
       if (checkFeedback(getLinesRead())) {
          logBasic("Linenr " + getLinesRead()); // Some basic logging
       }
-      Map<String, SequoiaDBOutputFieldInfo> l = m_meta.getSelectedFields() ;
+      List<SequoiaDBOutputFieldInfo> l = m_meta.getSelectedFields() ;
       if ( null != l && 0 != l.size() ) {
-         BSONObject recObj = m_data.kettleToBson( r,
-                                                  m_meta.getOutputRecordInfo() );
-         if ( recObj != null ) {
-             m_buffer.add( recObj ) ;
-          }
-
-          if ( m_buffer.size() >= m_bulkInsertSize ){
-             flushToDB() ;
-          }
+         if(!m_update) {
+            BSONObject recObj = m_data.getInserter( r, m_meta.getOutputRecordInfo() );
+            if ( recObj != null ) {
+               m_buffer.add( recObj ) ;
+            }
+            
+            if ( m_buffer.size() >= m_bulkInsertSize ){
+               flushToDB() ;
+            }
+         }
+         else {
+            BSONObject ruler = m_data.getUpdater( r, m_meta.getOutputRecordInfo() );
+            BSONObject cond = m_data.getUpdateCond( r, m_meta.getOutputRecordInfo() ) ;
+            if( m_upsert ) {
+               m_cl.upsert( cond, ruler, null );
+            }
+            else {
+               m_cl.update( cond, ruler, null );
+            }
+         }
       }   
 
       // indicate that processRow() should be called again
@@ -156,9 +181,9 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
       }
    }
    
-   void checkFields( RowMetaInterface rmi, Map<String, SequoiaDBOutputFieldInfo> fields ) throws KettleException {
+   void checkFields( RowMetaInterface rmi, List<SequoiaDBOutputFieldInfo> fields ) throws KettleException {
       // check if match input fields
-      if ( rmi.getFieldNames().length <= 0 || rmi.getFieldNames().length < fields.size() ) {
+      if ( rmi.getFieldNames().length <= 0 ) {
          throw new KettleException( BaseMessages.getString( PKG,
                "SequoiaDBOutput.Msg.Err.InputFieldsSizeError" )) ;
       }
@@ -172,8 +197,8 @@ public class SequoiaDBOutput extends BaseStep implements StepInterface {
       for( int i = 0; i < rmi.size(); i++ ) {
          input.add( rmi.getValueMeta( i ).getName() );
       }
-      for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fields.entrySet() ){
-         output.add( entry.getKey() ) ;
+      for( int j = 0; j < fields.size(); j++ ){
+         output.add( fields.get(j).getName() ) ;
       }
       
       if ( !input.containsAll( output )) {

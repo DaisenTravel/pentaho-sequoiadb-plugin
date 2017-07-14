@@ -1,36 +1,56 @@
 package org.pentaho.di.trans.steps.sequoiadboutput;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.bson.types.BSONTimestamp;
 import org.pentaho.di.core.exception.KettleValueException;
 import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.i18n.BaseMessages;
 
-public class SequoiaDBOutputFieldInfo {
-   
+public class SequoiaDBOutputFieldInfo{
+
    private static Class<?> PKG = SequoiaDBOutputMeta.class;
    
-   private List<String> m_fieldPath = new ArrayList<String>();
+   private String m_name = "" ;
    
-   private Object m_value ;
+   private String m_path = "" ;
    
-   public List<String> getFieldPath() {
-      return m_fieldPath ;
+   private String m_updateOp = "$set" ;
+   
+   private boolean m_cond = false ;
+   
+   public SequoiaDBOutputFieldInfo( String name, String path) {
+      m_name = name ;
+      if( null == path || path.isEmpty() ) {
+         m_path = m_name ;
+      }
+      else {
+         m_path = path ;
+      }
    }
    
-   public void addFieldPath( String fieldPath ) {
-      m_fieldPath.add( fieldPath ) ;
+   public String getName() {
+      return m_name ;
    }
    
-   public void setVal( Object input, ValueMetaInterface vmi ) throws KettleValueException {
-      m_value = getBsonValue( input, vmi ) ;
+   public String getPath() {
+      return m_path ;
    }
    
-   public Object getVal(){
-      return m_value ;
+   public void setUpdateOp(String updateOp) {
+      m_updateOp = updateOp ;
+   }
+   
+   public String getUpdateOp() {
+      return m_updateOp ;
+   }
+   
+   public void setCond(boolean cond) {
+      m_cond = cond ;
+   }
+   
+   public boolean getCond() {
+      return m_cond ;
    }
 
    public Object getBsonValue( Object input, ValueMetaInterface vmi ) throws KettleValueException {
