@@ -16,7 +16,6 @@
 package org.pentaho.di.ui.trans.steps.sequoiadboutput;
 
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -55,6 +54,7 @@ import org.pentaho.di.ui.core.dialog.ErrorDialog;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
 import org.pentaho.di.ui.core.widget.TableView;
 import org.pentaho.di.ui.core.widget.TextVar;
+import org.pentaho.di.ui.core.widget.PasswordTextVar;
 import org.pentaho.di.ui.trans.step.BaseStepDialog;
 
 public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogInterface {
@@ -75,6 +75,9 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
    private TextVar m_wBulkInsertSize ;
    private TableView m_fieldsView;
    private Button m_getFieldsBut;
+   private Button m_truncateBut;
+   private Button m_updateBut;
+   private Button m_upsertBut;
 
    private SequoiaDBOutputMeta m_meta;
 
@@ -230,7 +233,7 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       fdlPassword.right = new FormAttachment(middle, -margin);
       fdlPassword.top = new FormAttachment(lastControl, margin);
       wlPassword.setLayoutData(fdlPassword);
-      m_wPassword = new TextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
+      m_wPassword = new PasswordTextVar(transMeta, wConnComp, SWT.SINGLE | SWT.LEFT
                                 | SWT.BORDER);
       props.setLook(m_wPassword);
       m_wPassword.addModifyListener(lsMod);
@@ -318,6 +321,87 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       m_wBulkInsertSize.setLayoutData(fdBulkInsertSize);
       lastControl = m_wBulkInsertSize;
       wOutputComp.setLayoutData(fdBulkInsertSize);
+
+      // Truncate
+      Label wlTruncate = new Label( wOutputComp, SWT.RIGHT );
+      wlTruncate.setText( BaseMessages.getString( PKG, "SequoiaDBOutput.Truncate.Label" ) ); //$NON-NLS-1$
+      props.setLook( wlTruncate );
+      wlTruncate.setToolTipText( BaseMessages.getString( PKG, "SequoiaDBOutput.Truncate.TipText" ) ); //$NON-NLS-1$
+      FormData fdlTruncate = new FormData();
+      fdlTruncate.left = new FormAttachment( 0, 0 );
+      fdlTruncate.top = new FormAttachment( lastControl, margin );
+      fdlTruncate.right = new FormAttachment( middle, -margin );
+      wlTruncate.setLayoutData( fdlTruncate );
+
+      m_truncateBut = new Button( wOutputComp, SWT.CHECK );
+      props.setLook( m_truncateBut );
+      m_truncateBut.setToolTipText( BaseMessages.getString( PKG, "SequoiaDBOutput.Truncate.TipText" ) ); //$NON-NLS-1$
+      FormData fdTruncate = new FormData();
+      fdTruncate.right = new FormAttachment( 100, 0 );
+      fdTruncate.top = new FormAttachment( lastControl, margin );
+      fdTruncate.left = new FormAttachment( middle, 0 );
+      m_truncateBut.setLayoutData( fdTruncate );
+      m_truncateBut.addSelectionListener( new SelectionAdapter() {
+        @Override
+        public void widgetSelected( SelectionEvent e ) {
+          m_meta.setChanged();
+        }
+      } );
+      lastControl = m_truncateBut;
+
+      // Update
+      Label wlUpdate = new Label( wOutputComp, SWT.RIGHT );
+      wlUpdate.setText( BaseMessages.getString( PKG, "SequoiaDBOutput.Update.Label" ) ); //$NON-NLS-1$
+      props.setLook( wlUpdate );
+      FormData fdlUpdate = new FormData();
+      fdlUpdate.left = new FormAttachment( 0, 0 );
+      fdlUpdate.top = new FormAttachment( lastControl, margin );
+      fdlUpdate.right = new FormAttachment( middle, -margin );
+      wlUpdate.setLayoutData( fdlUpdate );
+
+      m_updateBut = new Button( wOutputComp, SWT.CHECK );
+      props.setLook( m_updateBut );
+      FormData fdUpdate = new FormData();
+      fdUpdate.right = new FormAttachment( 100, 0 );
+      fdUpdate.top = new FormAttachment( lastControl, margin );
+      fdUpdate.left = new FormAttachment( middle, 0 );
+      m_updateBut.setLayoutData( fdUpdate );
+      m_updateBut.addSelectionListener( new SelectionAdapter() {
+        @Override
+        public void widgetSelected( SelectionEvent e ) {
+          m_meta.setChanged();
+          m_upsertBut.setEnabled(m_updateBut.getSelection());
+          if(!m_updateBut.getSelection()) {
+             m_upsertBut.setSelection(false);
+          }
+        }
+      } );
+      lastControl = m_updateBut;
+
+      // Upsert
+      Label wlUpsert = new Label( wOutputComp, SWT.RIGHT );
+      wlUpsert.setText( BaseMessages.getString( PKG, "SequoiaDBOutput.Upsert.Label" ) ); //$NON-NLS-1$
+      props.setLook( wlUpsert );
+      FormData fdlUpsert = new FormData();
+      fdlUpsert.left = new FormAttachment( 0, 0 );
+      fdlUpsert.top = new FormAttachment( lastControl, margin );
+      fdlUpsert.right = new FormAttachment( middle, -margin );
+      wlUpsert.setLayoutData( fdlUpsert );
+
+      m_upsertBut = new Button( wOutputComp, SWT.CHECK );
+      props.setLook( m_upsertBut );
+      FormData fdUpsert = new FormData();
+      fdUpsert.right = new FormAttachment( 100, 0 );
+      fdUpsert.top = new FormAttachment( lastControl, margin );
+      fdUpsert.left = new FormAttachment( middle, 0 );
+      m_upsertBut.setLayoutData( fdUpsert );
+      m_upsertBut.addSelectionListener( new SelectionAdapter() {
+        @Override
+        public void widgetSelected( SelectionEvent e ) {
+          m_meta.setChanged();
+        }
+      } );
+      lastControl = m_upsertBut;
       
       wOutputComp.layout();
       m_wSdbOutputTab.setControl(wOutputComp);
@@ -339,7 +423,17 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
               ColumnInfo.COLUMN_TYPE_TEXT, false),
           new ColumnInfo(BaseMessages.getString(PKG,
               "SequoiaDBOutput.FieldsTab.FIELD_Path"), //$NON-NLS-1$
-              ColumnInfo.COLUMN_TYPE_TEXT, false), };
+              ColumnInfo.COLUMN_TYPE_TEXT, false),
+          new ColumnInfo(BaseMessages.getString(PKG,
+                "SequoiaDBOutput.FieldsTab.IsCondField"), //$NON-NLS-1$
+                ColumnInfo.COLUMN_TYPE_CCOMBO, false),
+          new ColumnInfo(BaseMessages.getString(PKG,
+                "SequoiaDBOutput.FieldsTab.UpdateOp"), //$NON-NLS-1$
+                ColumnInfo.COLUMN_TYPE_CCOMBO, false) };
+      colinf[2].setComboValues( new String[] { "Y", "N" } ); //$NON-NLS-1$ //$NON-NLS-2$
+      colinf[2].setReadOnly( true );
+      colinf[3].setComboValues( new String[] { "$set", "$inc" } ); //$NON-NLS-1$ //$NON-NLS-2$
+      colinf[3].setReadOnly( true );
       
       // get fields button
       m_getFieldsBut = new Button( wFieldsComp, SWT.PUSH | SWT.CENTER );
@@ -502,6 +596,10 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       m_wCSName.setText(Const.NVL(m_meta.getCSName(), ""));
       m_wCLName.setText(Const.NVL(m_meta.getCLName(), ""));
       m_wBulkInsertSize.setText(Const.NVL(m_meta.getBulkInsertSizeStr(), ""));
+      m_truncateBut.setSelection(m_meta.getTruncate());
+      m_updateBut.setSelection(m_meta.getUpdate());
+      m_upsertBut.setSelection(m_meta.getUpsert());
+      m_upsertBut.setEnabled(m_updateBut.getSelection());
       wStepname.selectAll();
       setSelectedFields(m_meta.getSelectedFields());
    }
@@ -515,6 +613,9 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       m_meta.setCSName(m_wCSName.getText());
       m_meta.setCLName(m_wCLName.getText());
       m_meta.setBulkInsertSize(m_wBulkInsertSize.getText());
+      m_meta.setTruncate(m_truncateBut.getSelection());
+      m_meta.setUpdate(m_updateBut.getSelection());
+      m_meta.setUpsert(m_upsertBut.getSelection());
       
       int numFields = m_fieldsView.nrNonEmpty();
       if (numFields > 0){
@@ -522,7 +623,8 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
          for (int i = 0; i < numFields; i++) {
             TableItem item = m_fieldsView.getNonEmpty(i);
             try {
-               m_meta.addSelectedField(item.getText(1).trim(), item.getText(2).trim() ) ;
+               m_meta.addSelectedField(item.getText(1).trim(), item.getText(2).trim(),
+                                       item.getText(3).trim(), item.getText(4).trim() ) ;
             } catch (KettleValueException e) {
                logError( BaseMessages.getString( PKG, "System.Dialog.GetFieldsFailed.Message" ), //$NON-NLS-1$
                      e );
@@ -543,28 +645,36 @@ public class SequoiaDBOutputDialog extends BaseStepDialog implements StepDialogI
       }
    }
    
-   private void setSelectedFields(Map<String, SequoiaDBOutputFieldInfo> fields) {
-      if (null == fields) {
+   private void setSelectedFields(List<SequoiaDBOutputFieldInfo> fieldsInfo) {
+      if (null == fieldsInfo) {
          return ;
       }
       
       m_fieldsView.clearAll();
-      for( Map.Entry<String, SequoiaDBOutputFieldInfo> entry : fields.entrySet() ){
-         List<String> fieldsPath = entry.getValue().getFieldPath() ;
-         int numFieldsPath = fieldsPath.size() ;
-         for ( int i = 0 ; i < numFieldsPath ; i++ ){
-            TableItem item = new TableItem(m_fieldsView.table, SWT.NONE);
-            
-            if(!Const.isEmpty(entry.getKey())){
-               item.setText(1, entry.getKey());
-            }
-            
-            if(!Const.isEmpty(fieldsPath.get(i))){
-               item.setText(2, fieldsPath.get(i));
-            }
+      int fieldNum = fieldsInfo.size() ;
+      SequoiaDBOutputFieldInfo tmpFieldInfo ;
+      for( int i = 0 ; i < fieldNum ; i++ ) {
+         tmpFieldInfo = fieldsInfo.get(i) ;
+         TableItem item = new TableItem(m_fieldsView.table, SWT.NONE);
+         if(!Const.isEmpty(tmpFieldInfo.getName())){
+            item.setText(1, tmpFieldInfo.getName());
+         }
+         if(!Const.isEmpty(tmpFieldInfo.getPath())){
+            item.setText(2, tmpFieldInfo.getPath());
+         }
+         if(tmpFieldInfo.getCond()){
+            item.setText(3, "Y");
+         }
+         else {
+            item.setText(3, "N");
+         }
+         if(!Const.isEmpty(tmpFieldInfo.getUpdateOp())){
+            item.setText(4, tmpFieldInfo.getUpdateOp());
+         }
+         else {
+            item.setText(4, "$set");
          }
       }
-      
       m_fieldsView.removeEmptyRows();
       m_fieldsView.setRowNums();
       m_fieldsView.optWidth(true);
